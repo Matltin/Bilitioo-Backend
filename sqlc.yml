@@ -1,9 +1,9 @@
 version: "1"
 packages:
   - name: "db"
-    path: "./test/"
-    queries: "./sqlc/"
-    schema: "./migrate/"
+    path: "./db/sqlc"
+    queries: "./db/queries/"
+    schema: "./db/migrate/"
     engine: "postgresql"
     emit_json_tags: true
     emit_prepared_queries: false
