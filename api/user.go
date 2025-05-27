@@ -17,9 +17,9 @@ type signInUserRequest struct {
 }
 
 type logInUserRequest struct {
-	Email string	`json:"email"`
-	PhoneNumber string	`json:"phone_number"`
-	Password string	`json:"password"`
+	Email       string `json:"email"`
+	PhoneNumber string `json:"phone_number"`
+	Password    string `json:"password"`
 }
 
 func (server *Server) signInUser(ctx *gin.Context) {
@@ -72,5 +72,3 @@ func (server *Server) signInUser(ctx *gin.Context) {
 	}
 	ctx.JSON(http.StatusOK, nil)
 }
-
-
