@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"log"
 
+	"github.com/Matltin/Bilitioo-Backend/api"
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"
 	_ "github.com/lib/pq"
 )
@@ -15,4 +16,7 @@ func main() {
 	}
 
 	Queries := db.New(DB)
+
+	server := api.NewServer(Queries)
+	server.Start(":8080")
 }

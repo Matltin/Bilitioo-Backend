@@ -20,6 +20,10 @@ func NewServer(db *db.Queries) *Server {
 	ser.router.POST("/sign-in", ser.signInUser)
 }
 
+func (server *Server) Start(add string) {
+	server.router.Run(add)
+}
+
 func errorResponse(err error) gin.H {
   return gin.H{"error": err.Error()}
 }
