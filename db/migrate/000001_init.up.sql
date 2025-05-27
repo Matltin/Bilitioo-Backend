@@ -18,9 +18,11 @@ CREATE TABLE "user" (
   "status" user_status NOT NULL DEFAULT 'ACTIVE',
   "phone_verified" bool NOT NULL DEFAULT false,
   "email_verified" bool NOT NULL DEFAULT false,
-  "created_at" timestamptz NOT NULL DEFAULT (now()),
-  UNIQUE("email", "phone_number")
+  "created_at" timestamptz NOT NULL DEFAULT (now())
 );
+
+CREATE UNIQUE INDEX unique_email_idx ON "user"(email) WHERE email <> '';
+CREATE UNIQUE INDEX unique_phone_idx ON "user"(phone_number) WHERE phone_number <> '';
 
 CREATE TABLE "profile" (
   "id" bigserial PRIMARY KEY,

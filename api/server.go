@@ -22,19 +22,28 @@ func NewServer(config util.Config, db *db.Queries) *Server {
 		log.Fatal(err)
 	}
 
-	router := gin.Default()
 	ser := &Server{
 		config:  config,
 		Queries: db,
-		router:  router,
 		tokenMaker: tokenMaker,
 	}
 
-
-	ser.router.POST("/sign-in", ser.signUpUser)
-	ser.router.POST("/log-in", ser.logInUser)
+	ser.setupRouter()
 
 	return ser
+}
+
+func (ser *Server) setupRouter() {
+	router := gin.Default()
+
+	router.POST("/sign-in", ser.signUpUser)
+	router.POST("/log-in", ser.logInUser)
+
+	authRoutes := router.Group("/").Use(authMiddleware(ser.tokenMaker))
+
+	
+
+	ser.router = router
 }
 
 func (server *Server) Start(add string) {
