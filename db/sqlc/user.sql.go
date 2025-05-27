@@ -83,3 +83,16 @@ func (q *Queries) GetUser(ctx context.Context, arg GetUserParams) (GetUserRow, e
 	)
 	return i, err
 }
+
+const initialProfile = `-- name: InitialProfile :exec
+INSERT INTO "profile" (
+  "user_id"
+) VALUES (
+  $1
+)
+`
+
+func (q *Queries) InitialProfile(ctx context.Context, userID int64) error {
+	_, err := q.db.ExecContext(ctx, initialProfile, userID)
+	return err
+}

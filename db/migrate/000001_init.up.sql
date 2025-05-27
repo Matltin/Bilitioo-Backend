@@ -25,13 +25,12 @@ CREATE UNIQUE INDEX unique_email_idx ON "user"(email) WHERE email <> '';
 CREATE UNIQUE INDEX unique_phone_idx ON "user"(phone_number) WHERE phone_number <> '';
 
 CREATE TABLE "profile" (
-  "id" bigserial PRIMARY KEY,
   "user_id" bigint UNIQUE NOT NULL,
-  "pic_dir" varchar  NOT NULL,
-  "first_name" varchar NOT NULL,
-  "last_name" varchar  NOT NULL,
-  "city_id" bigint NOT NULL,
-  "national_code" varchar NOT NULL
+  "pic_dir" varchar  NOT NULL DEFAULT '',
+  "first_name" varchar NOT NULL DEFAULT '',
+  "last_name" varchar  NOT NULL DEFAULT '',
+  "city_id" bigint NOT NULL DEFAULT 1,
+  "national_code" varchar NOT NULL DEFAULT ''
 );
 
 

@@ -14,3 +14,10 @@ SELECT
     "id", "email", "phone_number", "hashed_password"
 FROM "user"
 WHERE "email" = $1 OR "phone_number" = $2;
+
+-- name: InitialProfile :exec
+INSERT INTO "profile" (
+  "user_id"
+) VALUES (
+  $1
+);

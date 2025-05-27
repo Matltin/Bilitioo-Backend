@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"os/user"
 	"regexp"
 
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"
@@ -77,7 +78,7 @@ func (server *Server) signUpUser(ctx *gin.Context) {
 		PhoneVerified:  phoneVerify,
 	}
 
-	_, err = server.Queries.CreateUser(ctx, arg)
+	user, err := server.Queries.CreateUser(ctx, arg)
 	if err != nil {
 		if pqErr, ok := err.(*pq.Error); ok {
 			switch pqErr.Code.Name() {
@@ -88,6 +89,10 @@ func (server *Server) signUpUser(ctx *gin.Context) {
 		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
+	}
+	err = server.Queries.InitialProfile(ctx, user.ID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 	}
 	ctx.JSON(http.StatusOK, nil)
 }

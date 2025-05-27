@@ -553,7 +553,6 @@ type Penalty struct {
 }
 
 type Profile struct {
-	ID           int64  `json:"id"`
 	UserID       int64  `json:"user_id"`
 	PicDir       string `json:"pic_dir"`
 	FirstName    string `json:"first_name"`
