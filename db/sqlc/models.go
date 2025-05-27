@@ -553,13 +553,13 @@ type Penalty struct {
 }
 
 type Profile struct {
-	ID           int64          `json:"id"`
-	UserID       int64          `json:"user_id"`
-	PicDir       sql.NullString `json:"pic_dir"`
-	FirstName    sql.NullString `json:"first_name"`
-	LastName     sql.NullString `json:"last_name"`
-	CityID       sql.NullInt64  `json:"city_id"`
-	NationalCode sql.NullString `json:"national_code"`
+	ID           int64  `json:"id"`
+	UserID       int64  `json:"user_id"`
+	PicDir       string `json:"pic_dir"`
+	FirstName    string `json:"first_name"`
+	LastName     string `json:"last_name"`
+	CityID       int64  `json:"city_id"`
+	NationalCode string `json:"national_code"`
 }
 
 type Report struct {
@@ -649,16 +649,16 @@ type TrainSeat struct {
 }
 
 type User struct {
-	ID               int64          `json:"id"`
-	Email            sql.NullString `json:"email"`
-	PhoneNumber      sql.NullString `json:"phone_number"`
-	HashedPassword   sql.NullString `json:"hashed_password"`
-	PasswordChangeAt time.Time      `json:"password_change_at"`
-	Role             Role           `json:"role"`
-	Status           UserStatus     `json:"status"`
-	PhoneVerified    bool           `json:"phone_verified"`
-	EmailVerified    bool           `json:"email_verified"`
-	CreatedAt        time.Time      `json:"created_at"`
+	ID               int64      `json:"id"`
+	Email            string     `json:"email"`
+	PhoneNumber      string     `json:"phone_number"`
+	HashedPassword   string     `json:"hashed_password"`
+	PasswordChangeAt time.Time  `json:"password_change_at"`
+	Role             Role       `json:"role"`
+	Status           UserStatus `json:"status"`
+	PhoneVerified    bool       `json:"phone_verified"`
+	EmailVerified    bool       `json:"email_verified"`
+	CreatedAt        time.Time  `json:"created_at"`
 }
 
 type UserActivity struct {

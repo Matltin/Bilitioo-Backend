@@ -10,9 +10,9 @@ CREATE TYPE "user_status" AS ENUM (
 
 CREATE TABLE "user" (
   "id" bigserial PRIMARY KEY,
-  "email" varchar ,
-  "phone_number" varchar(11),
-  "hashed_password" varchar,
+  "email" varchar NOT NULL,
+  "phone_number" varchar(11) NOT NULL,
+  "hashed_password" varchar NOT NULL,
   "password_change_at" timestamptz NOT NULL DEFAULT (now()),
   "role" role NOT NULL DEFAULT 'USER',
   "status" user_status NOT NULL DEFAULT 'ACTIVE',
@@ -24,11 +24,11 @@ CREATE TABLE "user" (
 CREATE TABLE "profile" (
   "id" bigserial PRIMARY KEY,
   "user_id" bigint UNIQUE NOT NULL,
-  "pic_dir" varchar,
-  "first_name" varchar,
-  "last_name" varchar,
-  "city_id" bigint ,
-  "national_code" varchar
+  "pic_dir" varchar  NOT NULL,
+  "first_name" varchar NOT NULL,
+  "last_name" varchar  NOT NULL,
+  "city_id" bigint NOT NULL,
+  "national_code" varchar NOT NULL
 );
 
 
