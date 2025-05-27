@@ -2,19 +2,20 @@ package api
 
 import (
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"
-	"github.com/Matltin/Bilitioo-Backend/token"
 	"github.com/gin-gonic/gin"
 )
 
 type Server struct {
+	config  util.Config
 	router  *gin.Engine
 	Queries *db.Queries
 	tokenMaker token.Maker
 }
 
-func NewServer(db *db.Queries) *Server {
+func NewServer(config util.Config, db *db.Queries) *Server {
 	router := gin.Default()
 	ser := &Server{
+		config: config,
 		Queries: db,
 		router:  router,
 		
@@ -30,5 +31,5 @@ func (server *Server) Start(add string) {
 }
 
 func errorResponse(err error) gin.H {
-  return gin.H{"error": err.Error()}
+	return gin.H{"error": err.Error()}
 }
