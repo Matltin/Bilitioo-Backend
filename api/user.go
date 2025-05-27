@@ -74,6 +74,11 @@ type logInUserRequest struct {
 	Password    string `json:"password"`
 }
 
+type logInUserResponse struct {
+	User db.GetUserRow		`json:"user"`
+	AccessToken string	`json:"access_token"`
+}
+
 func (server *Server) logInUser(ctx *gin.Context) {
 	var req logInUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -106,4 +111,17 @@ func (server *Server) logInUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 	}
 	
+	accessToken, _, err := server.tokenMaker.CreateToken(user.ID, server.config.AccessTokenDuration)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := logInUserResponse{
+		User: user,
+		AccessToken: accessToken,
+	}
+
+	ctx.JSON(http.StatusOK, res)
 }
+
