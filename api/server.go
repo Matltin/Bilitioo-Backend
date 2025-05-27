@@ -32,6 +32,7 @@ func NewServer(config util.Config, db *db.Queries) *Server {
 
 
 	ser.router.POST("/sign-in", ser.signUpUser)
+	ser.router.POST("/log-in", ser.logInUser)
 
 	return ser
 }

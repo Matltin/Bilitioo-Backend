@@ -14,7 +14,7 @@ import (
 type signUpUserRequest struct {
 	Email       string `json:"email"`
 	PhoneNumber string `json:"phone_number"`
-	Password    string `json:"password"`
+	Password    string `json:"password" binding:"required,min=8"`
 }
 
 func (server *Server) signUpUser(ctx *gin.Context) {
