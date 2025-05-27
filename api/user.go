@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"regexp"
 
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"
 	"github.com/Matltin/Bilitioo-Backend/util"
@@ -17,10 +18,33 @@ type signUpUserRequest struct {
 	Password    string `json:"password" binding:"required,min=8"`
 }
 
+func isValidPhoneNumber(phone string) bool {
+	matched, _ := regexp.MatchString(`^09\d{9}$`, phone)
+	return matched
+}
+
+func isValidEmail(email string) bool {
+	// Simple regex for email validation
+	matched, _ := regexp.MatchString(`^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`, email)
+	return matched
+}
+
 func (server *Server) signUpUser(ctx *gin.Context) {
 	var req signUpUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	// Email validation
+	if req.Email != "" && !isValidEmail(req.Email) {
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid email format")))
+		return
+	}
+
+	// Phone number validation
+	if req.PhoneNumber != "" && !isValidPhoneNumber(req.PhoneNumber) {
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid phone number format. It must start with 09 and be 11 digits long")))
 		return
 	}
 
@@ -41,7 +65,7 @@ func (server *Server) signUpUser(ctx *gin.Context) {
 	}
 
 	if req.Email == "" && req.PhoneNumber == "" {
-		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("Either email or phone_number must be provided.")))
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("either email or phone_number must be provided")))
 		return
 	}
 
@@ -75,8 +99,8 @@ type logInUserRequest struct {
 }
 
 type logInUserResponse struct {
-	User db.GetUserRow		`json:"user"`
-	AccessToken string	`json:"access_token"`
+	User        db.GetUserRow `json:"user"`
+	AccessToken string        `json:"access_token"`
 }
 
 func (server *Server) logInUser(ctx *gin.Context) {
@@ -87,7 +111,7 @@ func (server *Server) logInUser(ctx *gin.Context) {
 	}
 
 	if req.Email == "" && req.PhoneNumber == "" {
-		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("Either email or phone_number must be provided.")))
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("either email or phone_number must be provided")))
 		return
 	}
 
@@ -110,7 +134,7 @@ func (server *Server) logInUser(ctx *gin.Context) {
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 	}
-	
+
 	accessToken, _, err := server.tokenMaker.CreateToken(user.ID, server.config.AccessTokenDuration)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -118,10 +142,9 @@ func (server *Server) logInUser(ctx *gin.Context) {
 	}
 
 	res := logInUserResponse{
-		User: user,
+		User:        user,
 		AccessToken: accessToken,
 	}
 
 	ctx.JSON(http.StatusOK, res)
 }
-
