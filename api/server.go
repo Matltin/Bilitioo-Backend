@@ -17,7 +17,9 @@ func NewServer(db *db.Queries) *Server {
 		router:  router,
 	}
 
-	ser.router.POST("/sign-in", ser.signInUser)
+	ser.router.POST("/sign-in", ser.signUpUser)
+
+	return ser
 }
 
 func errorResponse(err error) gin.H {
