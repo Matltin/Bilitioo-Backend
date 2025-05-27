@@ -1,6 +1,7 @@
 package api
 
 import (
+	"database/sql"
 	"errors"
 	"net/http"
 
@@ -10,20 +11,14 @@ import (
 	"github.com/lib/pq"
 )
 
-type signInUserRequest struct {
+type signUpUserRequest struct {
 	Email       string `json:"email"`
 	PhoneNumber string `json:"phone_number"`
 	Password    string `json:"password"`
 }
 
-type logInUserRequest struct {
-	Email       string `json:"email"`
-	PhoneNumber string `json:"phone_number"`
-	Password    string `json:"password"`
-}
-
-func (server *Server) signInUser(ctx *gin.Context) {
-	var req signInUserRequest
+func (server *Server) signUpUser(ctx *gin.Context) {
+	var req signUpUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
@@ -71,4 +66,44 @@ func (server *Server) signInUser(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, nil)
+}
+
+type logInUserRequest struct {
+	Email       string `json:"email"`
+	PhoneNumber string `json:"phone_number"`
+	Password    string `json:"password"`
+}
+
+func (server *Server) logInUser(ctx *gin.Context) {
+	var req logInUserRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	if req.Email == "" && req.PhoneNumber == "" {
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("Either email or phone_number must be provided.")))
+		return
+	}
+
+	arg := db.GetUserParams{
+		Email:       req.Email,
+		PhoneNumber: req.PhoneNumber,
+	}
+
+	user, err := server.Queries.GetUser(ctx, arg)
+
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	err = util.CheckPassword(req.Password, user.HashedPassword)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+	}
+	
 }
