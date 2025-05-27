@@ -210,7 +210,7 @@ FOREIGN KEY ("destination_terminal_id") REFERENCES "terminal"("id") ON DELETE CA
 
 ALTER TABLE "route"
 ADD CONSTRAINT distance_validation
-CHECK (distance > 0)
+CHECK (distance > 0);
 
 CREATE TABLE "seat" (
   "id" bigserial PRIMARY KEY,
