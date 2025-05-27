@@ -6,17 +6,23 @@ import (
 
 	"github.com/Matltin/Bilitioo-Backend/api"
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"
+	"github.com/Matltin/Bilitioo-Backend/util"
 	_ "github.com/lib/pq"
 )
 
 func main() {
-	DB, err := sql.Open("postgres", "postgresql://root:secret@localhost:5432/bilitioo?sslmode=disable")
+	config, err := util.LoadConfig(".")
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	DB, err := sql.Open(config.DBDriver, config.DBSource)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	Queries := db.New(DB)
 
-	server := api.NewServer(Queries)
+	server := api.NewServer(config, Queries)
 	server.Start(":8080")
 }
