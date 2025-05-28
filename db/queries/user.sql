@@ -21,3 +21,11 @@ INSERT INTO "profile" (
 ) VALUES (
   $1
 );
+
+-- name: UpdateUserContact :one
+UPDATE "user"
+SET
+  email = COALESCE(sqlc.narg(email), email),
+  phone_number = COALESCE(sqlc.narg(phone_number), phone_number)
+WHERE id = $1
+RETURNING *;

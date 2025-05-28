@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 )
 
 const createUser = `-- name: CreateUser :one
@@ -95,4 +96,37 @@ INSERT INTO "profile" (
 func (q *Queries) InitialProfile(ctx context.Context, userID int64) error {
 	_, err := q.db.ExecContext(ctx, initialProfile, userID)
 	return err
+}
+
+const updateUserContact = `-- name: UpdateUserContact :one
+UPDATE "user"
+SET
+  email = COALESCE($2, email),
+  phone_number = COALESCE($3, phone_number)
+WHERE id = $1
+RETURNING id, email, phone_number, hashed_password, password_change_at, role, status, phone_verified, email_verified, created_at
+`
+
+type UpdateUserContactParams struct {
+	ID          int64          `json:"id"`
+	Email       sql.NullString `json:"email"`
+	PhoneNumber sql.NullString `json:"phone_number"`
+}
+
+func (q *Queries) UpdateUserContact(ctx context.Context, arg UpdateUserContactParams) (User, error) {
+	row := q.db.QueryRowContext(ctx, updateUserContact, arg.ID, arg.Email, arg.PhoneNumber)
+	var i User
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.PhoneNumber,
+		&i.HashedPassword,
+		&i.PasswordChangeAt,
+		&i.Role,
+		&i.Status,
+		&i.PhoneVerified,
+		&i.EmailVerified,
+		&i.CreatedAt,
+	)
+	return i, err
 }
