@@ -26,7 +26,7 @@ CREATE UNIQUE INDEX unique_phone_idx ON "user"(phone_number) WHERE phone_number 
 
 CREATE TABLE "profile" (
   "user_id" bigint UNIQUE NOT NULL,
-  "pic_dir" varchar  NOT NULL DEFAULT '',
+  "pic_dir" varchar NOT NULL DEFAULT '',
   "first_name" varchar NOT NULL DEFAULT '',
   "last_name" varchar  NOT NULL DEFAULT '',
   "city_id" bigint NOT NULL DEFAULT 1,

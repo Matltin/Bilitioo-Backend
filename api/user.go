@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
-	"os/user"
 	"regexp"
 
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"

@@ -41,6 +41,7 @@ func (ser *Server) setupRouter() {
 
 	authRoutes := router.Group("/").Use(authMiddleware(ser.tokenMaker))
 
+	authRoutes.PUT("/profile", ser.updateProfile)
 	
 
 	ser.router = router
