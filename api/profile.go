@@ -42,23 +42,23 @@ func (server *Server) updateProfile(ctx *gin.Context) {
 		UserID: authPayload.UserID,
 		PicDir: sql.NullString{
 			String: req.PicDir,
-			Valid:  true,
+			Valid:  req.PicDir != "",
 		},
 		FirstName: sql.NullString{
 			String: req.FirstName,
-			Valid:  true,
+			Valid:  req.FirstName != "",
 		},
 		LastName: sql.NullString{
 			String: req.LastName,
-			Valid:  true,
+			Valid:  req.LastName != "",
 		},
 		CityID: sql.NullInt64{
 			Int64: req.CityID,
-			Valid: true,
+			Valid: req.CityID > 0,
 		},
 		NationalCode: sql.NullString{
 			String: req.NationalCode,
-			Valid:  true,
+			Valid:  req.NationalCode != "",
 		},
 	}
 
@@ -72,11 +72,11 @@ func (server *Server) updateProfile(ctx *gin.Context) {
 		ID: authPayload.UserID,
 		Email: sql.NullString{
 			String: req.Email,
-			Valid:  true,
+			Valid:  req.Email != "",
 		},
 		PhoneNumber: sql.NullString{
 			String: req.PhoneNumber,
-			Valid:  true,
+			Valid:  req.PhoneNumber != "",
 		},
 	}
 
