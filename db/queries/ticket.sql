@@ -47,3 +47,7 @@ WHERE
     AND t.status = 'NOT_RESERVED'
 ORDER BY t.departure_time ASC
 LIMIT 50;
+
+-- name: GetTicket :one
+SELECT * FROM "ticket"
+WHERE id = $1;

@@ -46,6 +46,7 @@ func (ser *Server) setupRouter() {
 	authRoutes.GET("/city", ser.getCities)
 	authRoutes.POST("/city", ser.searchTicketsByCities)
 	authRoutes.GET("/ticket-detail/:ticket_id", ser.getTicketDetails)
+	authRoutes.POST("/reservation", ser.createReservation)
 
 	ser.router = router
 }

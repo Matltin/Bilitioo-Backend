@@ -12,6 +12,30 @@ import (
 	"time"
 )
 
+const getTicket = `-- name: GetTicket :one
+SELECT id, vehicle_id, seat_id, vehicle_type, route_id, amount, departure_time, arrival_time, count_stand, status, created_at FROM "ticket"
+WHERE id = $1
+`
+
+func (q *Queries) GetTicket(ctx context.Context, id int64) (Ticket, error) {
+	row := q.db.QueryRowContext(ctx, getTicket, id)
+	var i Ticket
+	err := row.Scan(
+		&i.ID,
+		&i.VehicleID,
+		&i.SeatID,
+		&i.VehicleType,
+		&i.RouteID,
+		&i.Amount,
+		&i.DepartureTime,
+		&i.ArrivalTime,
+		&i.CountStand,
+		&i.Status,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getTicketDetails = `-- name: GetTicketDetails :one
 SELECT 
     oc.province AS "origin",
@@ -87,8 +111,8 @@ SELECT
     t.vehicle_type,
     t.route_id,
     t.amount,
-    t.departure_time,
-    t.arrival_time,
+    to_char(t.departure_time, 'YYYY-MM-DD HH24:MI') as departure_time,
+    to_char(t.arrival_time, 'YYYY-MM-DD HH24:MI') as arrival_time,
     t.count_stand,
     t.status
 FROM ticket t
@@ -96,7 +120,7 @@ JOIN route r ON t.route_id = r.id
 WHERE
     ($1::bigint IS NULL OR r.origin_city_id = $1)
     AND ($2::bigint IS NULL OR r.destination_city_id = $2)
-    AND ($3::date IS NULL OR t.departure_time::date = $3)
+    AND ($3::date IS NULL OR t.departure_time::date = $3::date)
     AND ($4::vehicle_type IS NULL OR t.vehicle_type = $4)
     AND t.status = 'NOT_RESERVED'
 ORDER BY t.departure_time ASC
@@ -117,8 +141,8 @@ type SearchTicketsRow struct {
 	VehicleType   VehicleType                  `json:"vehicle_type"`
 	RouteID       int64                        `json:"route_id"`
 	Amount        int64                        `json:"amount"`
-	DepartureTime time.Time                    `json:"departure_time"`
-	ArrivalTime   time.Time                    `json:"arrival_time"`
+	DepartureTime string                       `json:"departure_time"`
+	ArrivalTime   string                       `json:"arrival_time"`
 	CountStand    int32                        `json:"count_stand"`
 	Status        CheckReservationTicketStatus `json:"status"`
 }

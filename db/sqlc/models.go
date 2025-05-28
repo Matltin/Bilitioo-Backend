@@ -508,12 +508,12 @@ type BusSeat struct {
 }
 
 type ChangeReservation struct {
-	ID            int64         `json:"id"`
-	ReservationID int64         `json:"reservation_id"`
-	AdminID       sql.NullInt64 `json:"admin_id"`
-	UserID        int64         `json:"user_id"`
-	FromStatus    TicketStatus  `json:"from_status"`
-	ToStatus      TicketStatus  `json:"to_status"`
+	ID            int64        `json:"id"`
+	ReservationID int64        `json:"reservation_id"`
+	AdminID       int64        `json:"admin_id"`
+	UserID        int64        `json:"user_id"`
+	FromStatus    TicketStatus `json:"from_status"`
+	ToStatus      TicketStatus `json:"to_status"`
 }
 
 type City struct {
@@ -538,7 +538,7 @@ type NotificationLog struct {
 
 type Payment struct {
 	ID          int64         `json:"id"`
-	FromAccount string        `json:"from_account"`
+	FromAccount int64         `json:"from_account"`
 	ToAccount   string        `json:"to_account"`
 	Amount      int64         `json:"amount"`
 	Type        PaymentType   `json:"type"`
@@ -575,7 +575,7 @@ type Reservation struct {
 	ID           int64         `json:"id"`
 	UserID       int64         `json:"user_id"`
 	TicketID     int64         `json:"ticket_id"`
-	PaymentID    sql.NullInt64 `json:"payment_id"`
+	PaymentID    int64         `json:"payment_id"`
 	Status       TicketStatus  `json:"status"`
 	DurationTime time.Duration `json:"duration_time"`
 	CreatedAt    time.Time     `json:"created_at"`
