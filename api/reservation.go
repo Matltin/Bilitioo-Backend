@@ -2,7 +2,6 @@ package api
 
 import (
 	"database/sql"
-	"log"
 	"net/http"
 
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"
@@ -72,9 +71,6 @@ func (server *Server) createReservation(ctx *gin.Context) {
 			TicketID:  t.ID,
 			PaymentID: payment.ID,
 		}
-
-		log.Println("\n\n", argReservation, "\n\n")
-
 
 		reservation, err := server.Queries.CreateReservation(ctx, argReservation)
 		if err != nil {
