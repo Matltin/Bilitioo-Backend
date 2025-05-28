@@ -52,7 +52,6 @@ func (server *Server) searchTickets(ctx *gin.Context) {
 
 	log.Println("\n\n", params, "\n\n")
 
-
 	tickets, err := server.Queries.SearchTickets(ctx, params)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
