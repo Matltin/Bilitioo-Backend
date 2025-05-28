@@ -12,12 +12,6 @@ import (
 	"github.com/lib/pq"
 )
 
-type signUpUserRequest struct {
-	Email       string `json:"email"`
-	PhoneNumber string `json:"phone_number"`
-	Password    string `json:"password" binding:"required,min=8"`
-}
-
 func isValidPhoneNumber(phone string) bool {
 	matched, _ := regexp.MatchString(`^09\d{9}$`, phone)
 	return matched
@@ -29,6 +23,12 @@ func isValidEmail(email string) bool {
 	return matched
 }
 
+type signUpUserRequest struct {
+	Email       string `json:"email"`
+	PhoneNumber string `json:"phone_number"`
+	Password    string `json:"password" binding:"required,min=8"`
+}
+
 func (server *Server) signUpUser(ctx *gin.Context) {
 	var req signUpUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -36,13 +36,11 @@ func (server *Server) signUpUser(ctx *gin.Context) {
 		return
 	}
 
-	// Email validation
 	if req.Email != "" && !isValidEmail(req.Email) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid email format")))
 		return
 	}
 
-	// Phone number validation
 	if req.PhoneNumber != "" && !isValidPhoneNumber(req.PhoneNumber) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid phone number format. It must start with 09 and be 11 digits long")))
 		return

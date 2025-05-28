@@ -8,7 +8,65 @@ package db
 import (
 	"context"
 	"database/sql"
+	"time"
 )
+
+const getUserProfile = `-- name: GetUserProfile :one
+SELECT 
+  u.id AS user_id,
+  u.email,
+  u.phone_number,
+  u.role,
+  u.status,
+  u.phone_verified,
+  u.email_verified,
+  u.created_at,
+  p.pic_dir,
+  p.first_name,
+  p.last_name,
+  p.city_id,
+  p.national_code
+FROM "user" u
+JOIN "profile" p ON u.id = p.user_id
+WHERE u.id = $1
+`
+
+type GetUserProfileRow struct {
+	UserID        int64      `json:"user_id"`
+	Email         string     `json:"email"`
+	PhoneNumber   string     `json:"phone_number"`
+	Role          Role       `json:"role"`
+	Status        UserStatus `json:"status"`
+	PhoneVerified bool       `json:"phone_verified"`
+	EmailVerified bool       `json:"email_verified"`
+	CreatedAt     time.Time  `json:"created_at"`
+	PicDir        string     `json:"pic_dir"`
+	FirstName     string     `json:"first_name"`
+	LastName      string     `json:"last_name"`
+	CityID        int64      `json:"city_id"`
+	NationalCode  string     `json:"national_code"`
+}
+
+func (q *Queries) GetUserProfile(ctx context.Context, id int64) (GetUserProfileRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserProfile, id)
+	var i GetUserProfileRow
+	err := row.Scan(
+		&i.UserID,
+		&i.Email,
+		&i.PhoneNumber,
+		&i.Role,
+		&i.Status,
+		&i.PhoneVerified,
+		&i.EmailVerified,
+		&i.CreatedAt,
+		&i.PicDir,
+		&i.FirstName,
+		&i.LastName,
+		&i.CityID,
+		&i.NationalCode,
+	)
+	return i, err
+}
 
 const updateProfile = `-- name: UpdateProfile :one
 UPDATE "profile"

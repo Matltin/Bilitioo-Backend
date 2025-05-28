@@ -42,6 +42,9 @@ func (ser *Server) setupRouter() {
 	authRoutes := router.Group("/").Use(authMiddleware(ser.tokenMaker))
 
 	authRoutes.PUT("/profile", ser.updateProfile)
+	authRoutes.GET("/profile", ser.getUserProfile)
+	authRoutes.GET("/city", ser.getCities)
+	authRoutes.POST("/city", ser.searchTicketsByCities)
 	
 
 	ser.router = router
