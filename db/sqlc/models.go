@@ -577,7 +577,7 @@ type Reservation struct {
 	TicketID     int64         `json:"ticket_id"`
 	PaymentID    sql.NullInt64 `json:"payment_id"`
 	Status       TicketStatus  `json:"status"`
-	DurationTime int64         `json:"duration_time"`
+	DurationTime time.Duration `json:"duration_time"`
 	CreatedAt    time.Time     `json:"created_at"`
 }
 
@@ -606,12 +606,12 @@ type SendEmailSm struct {
 }
 
 type SendVerificationCode struct {
-	ID             int64     `json:"id"`
-	UserID         int64     `json:"user_id"`
-	SendEmailSmsID int64     `json:"send_email_sms_id"`
-	Token          string    `json:"token"`
-	DurationTime   int64     `json:"duration_time"`
-	CreatedAt      time.Time `json:"created_at"`
+	ID             int64         `json:"id"`
+	UserID         int64         `json:"user_id"`
+	SendEmailSmsID int64         `json:"send_email_sms_id"`
+	Token          string        `json:"token"`
+	DurationTime   time.Duration `json:"duration_time"`
+	CreatedAt      time.Time     `json:"created_at"`
 }
 
 type Terminal struct {
@@ -666,7 +666,7 @@ type UserActivity struct {
 	RouteID      int64          `json:"route_id"`
 	VehicleType  VehicleType    `json:"vehicle_type"`
 	Status       ActivityStatus `json:"status"`
-	DurationTime int64          `json:"duration_time"`
+	DurationTime time.Duration  `json:"duration_time"`
 	CreatedAt    time.Time      `json:"created_at"`
 }
 

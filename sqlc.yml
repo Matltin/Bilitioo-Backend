@@ -10,3 +10,6 @@ packages:
     emit_interface: false
     emit_exact_table_names: false
     emit_empty_slices: true
+    overrides:
+      - db_type: "pg_catalog.interval"
+        go_type: "time.Duration"
