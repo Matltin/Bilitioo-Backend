@@ -70,6 +70,11 @@ func (server *Server) searchTicketsByCities(ctx *gin.Context) {
 		return
 	}
 
+	if len(tickets) == 0 {
+		ctx.JSON(http.StatusNotFound, errorResponse(errors.New("there is no ticket with this route")))
+		return
+	}
+
 	authPayload := ctx.MustGet(authorizationPyloadKey).(*token.Payload)
 
 	argUserActivity := db.CreateUserActivityParams{
