@@ -39,3 +39,33 @@ func (q *Queries) CreatePayment(ctx context.Context, arg CreatePaymentParams) (P
 	)
 	return i, err
 }
+
+const updatePayment = `-- name: UpdatePayment :one
+UPDATE "payment"
+SET 
+    "type" = $1,
+    "status" = $2
+WHERE id = $3
+RETURNING id, from_account, to_account, amount, type, status, created_at
+`
+
+type UpdatePaymentParams struct {
+	Type   PaymentType   `json:"type"`
+	Status PaymentStatus `json:"status"`
+	ID     int64         `json:"id"`
+}
+
+func (q *Queries) UpdatePayment(ctx context.Context, arg UpdatePaymentParams) (Payment, error) {
+	row := q.db.QueryRowContext(ctx, updatePayment, arg.Type, arg.Status, arg.ID)
+	var i Payment
+	err := row.Scan(
+		&i.ID,
+		&i.FromAccount,
+		&i.ToAccount,
+		&i.Amount,
+		&i.Type,
+		&i.Status,
+		&i.CreatedAt,
+	)
+	return i, err
+}

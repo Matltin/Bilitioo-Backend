@@ -48,6 +48,8 @@ func (ser *Server) setupRouter() {
 	authRoutes.GET("/ticket-detail/:ticket_id", ser.getTicketDetails)
 	authRoutes.POST("/reservation", ser.createReservation)
 
+	authRoutes.POST("/payment", ser.payPayment)
+
 	ser.router = router
 }
 

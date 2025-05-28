@@ -6,4 +6,11 @@ INSERT INTO "user_activity" (
 ) VALUES (
     $1, $2, $3
 ) RETURNING *;
+
+-- name: UpdateUserActivity :one
+UPDATE "user_activity"
+SET 
+    "status" = $1
+WHERE id = $2
+RETURNING *;
     
