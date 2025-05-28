@@ -13,3 +13,14 @@ INSERT INTO "reservation" (
     status, 
     EXTRACT(EPOCH FROM duration_time)::bigint as duration_time_seconds,
     created_at;
+
+-- name: UpdateReservation :one
+UPDATE "reservation"
+SET 
+    "status" = $1
+WHERE id = $2
+RETURNING *;
+
+-- name: GetReservationStatus :one 
+SELECT status FROM "reservation" 
+WHERE id = $1;

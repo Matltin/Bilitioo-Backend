@@ -39,3 +39,31 @@ func (q *Queries) CreateUserActivity(ctx context.Context, arg CreateUserActivity
 	)
 	return i, err
 }
+
+const updateUserActivity = `-- name: UpdateUserActivity :one
+UPDATE "user_activity"
+SET 
+    "status" = $1
+WHERE id = $2
+RETURNING id, user_id, route_id, vehicle_type, status, duration_time, created_at
+`
+
+type UpdateUserActivityParams struct {
+	Status ActivityStatus `json:"status"`
+	ID     int64          `json:"id"`
+}
+
+func (q *Queries) UpdateUserActivity(ctx context.Context, arg UpdateUserActivityParams) (UserActivity, error) {
+	row := q.db.QueryRowContext(ctx, updateUserActivity, arg.Status, arg.ID)
+	var i UserActivity
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.RouteID,
+		&i.VehicleType,
+		&i.Status,
+		&i.DurationTime,
+		&i.CreatedAt,
+	)
+	return i, err
+}

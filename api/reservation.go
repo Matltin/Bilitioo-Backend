@@ -88,5 +88,8 @@ func (server *Server) createReservation(ctx *gin.Context) {
 		reservations = append(reservations, reservation)
 	}
 
-	ctx.JSON(http.StatusOK, reservations)
+	ctx.JSON(http.StatusOK, gin.H{
+		"reservations": reservations,
+		"payment": payment,
+	})
 }

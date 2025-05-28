@@ -57,3 +57,43 @@ func (q *Queries) CreateReservation(ctx context.Context, arg CreateReservationPa
 	)
 	return i, err
 }
+
+const getReservationStatus = `-- name: GetReservationStatus :one
+SELECT status FROM "reservation" 
+WHERE id = $1
+`
+
+func (q *Queries) GetReservationStatus(ctx context.Context, id int64) (TicketStatus, error) {
+	row := q.db.QueryRowContext(ctx, getReservationStatus, id)
+	var status TicketStatus
+	err := row.Scan(&status)
+	return status, err
+}
+
+const updateReservation = `-- name: UpdateReservation :one
+UPDATE "reservation"
+SET 
+    "status" = $1
+WHERE id = $2
+RETURNING id, user_id, ticket_id, payment_id, status, duration_time, created_at
+`
+
+type UpdateReservationParams struct {
+	Status TicketStatus `json:"status"`
+	ID     int64        `json:"id"`
+}
+
+func (q *Queries) UpdateReservation(ctx context.Context, arg UpdateReservationParams) (Reservation, error) {
+	row := q.db.QueryRowContext(ctx, updateReservation, arg.Status, arg.ID)
+	var i Reservation
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.TicketID,
+		&i.PaymentID,
+		&i.Status,
+		&i.DurationTime,
+		&i.CreatedAt,
+	)
+	return i, err
+}
