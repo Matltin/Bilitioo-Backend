@@ -1,6 +1,7 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
 
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"
@@ -9,17 +10,32 @@ import (
 )
 
 type payPaymentRequest struct {
-	PaymentID         int64   `json:"payment_id" binding:"required"`
-	Reservations      []int64 `json:"reservations" binding:"required"`
-	Type              string  `json:"type" binding:"required"`
-	PaymentStatus     string  `json:"payment_status" binding:"required"`
-	ReservationStatus string  `json:"reservatoin_status" binding:"required"`
+	PaymentID         int64   `json:"payment_id"`
+	Reservations      []int64 `json:"reservations"`
+	Type              string  `json:"type"`
+	PaymentStatus     string  `json:"payment_status"`
+	ReservationStatus string  `json:"reservatoin_status"`
 }
 
 func (server *Server) payPayment(ctx *gin.Context) {
 	var req payPaymentRequest
-	if err := ctx.ShouldBindUri(&req); err != nil {
+	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	if !isValidPaymentType(req.Type) {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid payment type")))
+		return
+	}
+
+	if !isValidPaymentStatus(req.PaymentStatus) {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid payment status")))
+		return
+	}
+
+	if !isValidTicketStatus(req.ReservationStatus) {
+		ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("invalid reservation status")))
 		return
 	}
 
@@ -73,17 +89,44 @@ func (server *Server) payPayment(ctx *gin.Context) {
 	}
 
 	userActivityID := ctx.MustGet(userActivityID).(int64)
-	
+
 	argUserActivity := db.UpdateUserActivityParams{
-		ID: userActivityID,
+		ID:     userActivityID,
 		Status: db.ActivityStatusPURCHASED,
 	}
 
 	server.Queries.UpdateUserActivity(ctx, argUserActivity)
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"payment":      payment,
-		"reservations": reservations,
+		"payment":          payment,
+		"reservations":     reservations,
 		"user_activity_id": userActivityID,
 	})
+}
+
+func isValidPaymentType(t string) bool {
+	switch t {
+	case "CASH", "CREDIT_CARD", "WALLET", "BANK_TRANSFER", "CRYPTO":
+		return true
+	default:
+		return false
+	}
+}
+
+func isValidPaymentStatus(s string) bool {
+	switch s {
+	case "PENDING", "COMPLETED", "FAILED", "REFUNDED":
+		return true
+	default:
+		return false
+	}
+}
+
+func isValidTicketStatus(s string) bool {
+	switch s {
+	case "RESERVED", "RESERVING", "CANCELED", "CANCELED-BY-TIME":
+		return true
+	default:
+		return false
+	}
 }
