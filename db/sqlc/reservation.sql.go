@@ -75,7 +75,14 @@ UPDATE "reservation"
 SET 
     "status" = $1
 WHERE id = $2
-RETURNING id, user_id, ticket_id, payment_id, status, duration_time, created_at
+RETURNING 
+    id, 
+    user_id, 
+    ticket_id, 
+    payment_id, 
+    status, 
+    EXTRACT(EPOCH FROM duration_time)::bigint as duration_time_seconds,
+    created_at
 `
 
 type UpdateReservationParams struct {
@@ -83,16 +90,26 @@ type UpdateReservationParams struct {
 	ID     int64        `json:"id"`
 }
 
-func (q *Queries) UpdateReservation(ctx context.Context, arg UpdateReservationParams) (Reservation, error) {
+type UpdateReservationRow struct {
+	ID                  int64        `json:"id"`
+	UserID              int64        `json:"user_id"`
+	TicketID            int64        `json:"ticket_id"`
+	PaymentID           int64        `json:"payment_id"`
+	Status              TicketStatus `json:"status"`
+	DurationTimeSeconds int64        `json:"duration_time_seconds"`
+	CreatedAt           time.Time    `json:"created_at"`
+}
+
+func (q *Queries) UpdateReservation(ctx context.Context, arg UpdateReservationParams) (UpdateReservationRow, error) {
 	row := q.db.QueryRowContext(ctx, updateReservation, arg.Status, arg.ID)
-	var i Reservation
+	var i UpdateReservationRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
 		&i.TicketID,
 		&i.PaymentID,
 		&i.Status,
-		&i.DurationTime,
+		&i.DurationTimeSeconds,
 		&i.CreatedAt,
 	)
 	return i, err

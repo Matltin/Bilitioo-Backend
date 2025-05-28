@@ -46,4 +46,8 @@ sqlc:
 test:
 	go test -v -cover -short ./...
 
+restart:
+	migrate -path db/migrate -database "postgresql://root:secret@localhost:5432/bilitioo?sslmode=disable" -verbose down
+	migrate -path db/migrate -database  "postgresql://root:secret@localhost:5432/bilitioo?sslmode=disable" -verbose up
+
 .PHONY: sqlc test	

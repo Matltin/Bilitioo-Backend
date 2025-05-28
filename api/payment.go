@@ -14,7 +14,7 @@ type payPaymentRequest struct {
 	Reservations      []int64 `json:"reservations"`
 	Type              string  `json:"type"`
 	PaymentStatus     string  `json:"payment_status"`
-	ReservationStatus string  `json:"reservatoin_status"`
+	ReservationStatus string  `json:"reservation_status"`
 }
 
 func (server *Server) payPayment(ctx *gin.Context) {
@@ -52,7 +52,7 @@ func (server *Server) payPayment(ctx *gin.Context) {
 	}
 
 	authPayload := ctx.MustGet(authorizationPyloadKey).(*token.Payload)
-	var reservations []db.Reservation
+	var reservations []db.UpdateReservationRow
 
 	for _, r := range req.Reservations {
 		status, err := server.Queries.GetReservationStatus(ctx, r)
@@ -88,19 +88,26 @@ func (server *Server) payPayment(ctx *gin.Context) {
 		}
 	}
 
-	userActivityID := ctx.MustGet(userActivityID).(int64)
+	var user_activity db.UpdateUserActivityRow
 
-	argUserActivity := db.UpdateUserActivityParams{
-		ID:     userActivityID,
-		Status: db.ActivityStatusPURCHASED,
+	idValue, exists := ctx.Get(userActivityID)
+	if exists {
+		argUserActivity := db.UpdateUserActivityParams{
+			ID:     idValue.(int64),
+			Status: db.ActivityStatusPURCHASED,
+		}
+
+		user_activity, err = server.Queries.UpdateUserActivity(ctx, argUserActivity)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
 	}
 
-	server.Queries.UpdateUserActivity(ctx, argUserActivity)
-
 	ctx.JSON(http.StatusOK, gin.H{
-		"payment":          payment,
-		"reservations":     reservations,
-		"user_activity_id": userActivityID,
+		"payment":       payment,
+		"reservations":  reservations,
+		"user_activity": user_activity,
 	})
 }
 

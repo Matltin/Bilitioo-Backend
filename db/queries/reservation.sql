@@ -19,7 +19,14 @@ UPDATE "reservation"
 SET 
     "status" = $1
 WHERE id = $2
-RETURNING *;
+RETURNING 
+    id, 
+    user_id, 
+    ticket_id, 
+    payment_id, 
+    status, 
+    EXTRACT(EPOCH FROM duration_time)::bigint as duration_time_seconds,
+    created_at;
 
 -- name: GetReservationStatus :one 
 SELECT status FROM "reservation" 

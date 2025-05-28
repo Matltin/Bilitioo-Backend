@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"time"
 )
 
 const createUserActivity = `-- name: CreateUserActivity :one
@@ -16,7 +17,14 @@ INSERT INTO "user_activity" (
     "vehicle_type"
 ) VALUES (
     $1, $2, $3
-) RETURNING id, user_id, route_id, vehicle_type, status, duration_time, created_at
+) RETURNING 
+    id, 
+    user_id, 
+    route_id, 
+    vehicle_type, 
+    status, 
+    EXTRACT(EPOCH FROM duration_time)::bigint as duration_time_seconds,
+    created_at
 `
 
 type CreateUserActivityParams struct {
@@ -25,16 +33,26 @@ type CreateUserActivityParams struct {
 	VehicleType VehicleType `json:"vehicle_type"`
 }
 
-func (q *Queries) CreateUserActivity(ctx context.Context, arg CreateUserActivityParams) (UserActivity, error) {
+type CreateUserActivityRow struct {
+	ID                  int64          `json:"id"`
+	UserID              int64          `json:"user_id"`
+	RouteID             int64          `json:"route_id"`
+	VehicleType         VehicleType    `json:"vehicle_type"`
+	Status              ActivityStatus `json:"status"`
+	DurationTimeSeconds int64          `json:"duration_time_seconds"`
+	CreatedAt           time.Time      `json:"created_at"`
+}
+
+func (q *Queries) CreateUserActivity(ctx context.Context, arg CreateUserActivityParams) (CreateUserActivityRow, error) {
 	row := q.db.QueryRowContext(ctx, createUserActivity, arg.UserID, arg.RouteID, arg.VehicleType)
-	var i UserActivity
+	var i CreateUserActivityRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
 		&i.RouteID,
 		&i.VehicleType,
 		&i.Status,
-		&i.DurationTime,
+		&i.DurationTimeSeconds,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -45,7 +63,14 @@ UPDATE "user_activity"
 SET 
     "status" = $1
 WHERE id = $2
-RETURNING id, user_id, route_id, vehicle_type, status, duration_time, created_at
+RETURNING 
+    id, 
+    user_id, 
+    route_id, 
+    vehicle_type, 
+    status, 
+    EXTRACT(EPOCH FROM duration_time)::bigint as duration_time_seconds,
+    created_at
 `
 
 type UpdateUserActivityParams struct {
@@ -53,16 +78,26 @@ type UpdateUserActivityParams struct {
 	ID     int64          `json:"id"`
 }
 
-func (q *Queries) UpdateUserActivity(ctx context.Context, arg UpdateUserActivityParams) (UserActivity, error) {
+type UpdateUserActivityRow struct {
+	ID                  int64          `json:"id"`
+	UserID              int64          `json:"user_id"`
+	RouteID             int64          `json:"route_id"`
+	VehicleType         VehicleType    `json:"vehicle_type"`
+	Status              ActivityStatus `json:"status"`
+	DurationTimeSeconds int64          `json:"duration_time_seconds"`
+	CreatedAt           time.Time      `json:"created_at"`
+}
+
+func (q *Queries) UpdateUserActivity(ctx context.Context, arg UpdateUserActivityParams) (UpdateUserActivityRow, error) {
 	row := q.db.QueryRowContext(ctx, updateUserActivity, arg.Status, arg.ID)
-	var i UserActivity
+	var i UpdateUserActivityRow
 	err := row.Scan(
 		&i.ID,
 		&i.UserID,
 		&i.RouteID,
 		&i.VehicleType,
 		&i.Status,
-		&i.DurationTime,
+		&i.DurationTimeSeconds,
 		&i.CreatedAt,
 	)
 	return i, err
