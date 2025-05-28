@@ -38,6 +38,7 @@ func (ser *Server) setupRouter() {
 
 	router.POST("/sign-in", ser.signUpUser)
 	router.POST("/log-in", ser.logInUser)
+	router.POST("/tickets", ser.searchTickets)
 
 	authRoutes := router.Group("/").Use(authMiddleware(ser.tokenMaker))
 
@@ -46,6 +47,7 @@ func (ser *Server) setupRouter() {
 	authRoutes.GET("/city", ser.getCities)
 	authRoutes.POST("/city", ser.searchTicketsByCities)
 	
+	// router.POST("tickets", ser.searchTickets)
 
 	ser.router = router
 }

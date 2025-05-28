@@ -78,3 +78,86 @@ func (q *Queries) GetTicketDetails(ctx context.Context, id int64) (GetTicketDeta
 	)
 	return i, err
 }
+
+const searchTickets = `-- name: SearchTickets :many
+SELECT 
+    t.id,
+    t.vehicle_id,
+    t.seat_id,
+    t.vehicle_type,
+    t.route_id,
+    t.amount,
+    t.departure_time,
+    t.arrival_time,
+    t.count_stand,
+    t.status
+FROM ticket t
+JOIN route r ON t.route_id = r.id
+WHERE
+    ($1::bigint IS NULL OR r.origin_city_id = $1)
+    AND ($2::bigint IS NULL OR r.destination_city_id = $2)
+    AND ($3::date IS NULL OR t.departure_time::date = $3)
+    AND ($4::vehicle_type IS NULL OR t.vehicle_type = $4)
+    AND t.status = 'NOT_RESERVED'
+ORDER BY t.departure_time ASC
+LIMIT 50
+`
+
+type SearchTicketsParams struct {
+	Column1 int64       `json:"column_1"`
+	Column2 int64       `json:"column_2"`
+	Column3 time.Time   `json:"column_3"`
+	Column4 VehicleType `json:"column_4"`
+}
+
+type SearchTicketsRow struct {
+	ID            int64                        `json:"id"`
+	VehicleID     int64                        `json:"vehicle_id"`
+	SeatID        int64                        `json:"seat_id"`
+	VehicleType   VehicleType                  `json:"vehicle_type"`
+	RouteID       int64                        `json:"route_id"`
+	Amount        int64                        `json:"amount"`
+	DepartureTime time.Time                    `json:"departure_time"`
+	ArrivalTime   time.Time                    `json:"arrival_time"`
+	CountStand    int32                        `json:"count_stand"`
+	Status        CheckReservationTicketStatus `json:"status"`
+}
+
+func (q *Queries) SearchTickets(ctx context.Context, arg SearchTicketsParams) ([]SearchTicketsRow, error) {
+	rows, err := q.db.QueryContext(ctx, searchTickets,
+		arg.Column1,
+		arg.Column2,
+		arg.Column3,
+		arg.Column4,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []SearchTicketsRow{}
+	for rows.Next() {
+		var i SearchTicketsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.VehicleID,
+			&i.SeatID,
+			&i.VehicleType,
+			&i.RouteID,
+			&i.Amount,
+			&i.DepartureTime,
+			&i.ArrivalTime,
+			&i.CountStand,
+			&i.Status,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
