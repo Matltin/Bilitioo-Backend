@@ -367,7 +367,9 @@ FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE;
 CREATE TABLE "penalty" (
   "id" bigserial PRIMARY KEY,
   "vehicle_id" bigint NOT NULL,
-  "penalty_text" text NOT NULL
+  "penalty_text" text NOT NULL,
+  "befor_day" int NOT NULL DEFAULT 0,
+  "after_day" int NOT NULL DEFAULT 0
 );
 
 ALTER TABLE "penalty" 
