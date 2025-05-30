@@ -47,6 +47,7 @@ func (ser *Server) setupRouter() {
 	authRoutes.POST("/city", ser.searchTicketsByCities)
 	authRoutes.GET("/ticket-detail/:ticket_id", ser.getTicketDetails)
 	authRoutes.POST("/reservation", ser.createReservation)
+	
 	authRoutes.POST("/payment", ser.payPayment)
 
 	authRoutes.GET("/search-tickets", ser.searchTickets)
@@ -55,6 +56,10 @@ func (ser *Server) setupRouter() {
 
 	authRoutes.GET("/penalty/:ticket_id", ser.getTicketPenalties)
 	authRoutes.PUT("/penalty/:ticket_id", ser.cancelReservation)
+
+	authRoutes.GET("/report", ser.getReports)
+	authRoutes.PUT("/report", ser.answerReport)
+	authRoutes.PUT("/manage-report", ser.updateTicketByReport)
 
 	ser.router = router
 }

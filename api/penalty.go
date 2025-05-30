@@ -17,7 +17,7 @@ type getTicketPenaltiesRequest struct {
 }
 
 func (server *Server) getTicketPenalties(ctx *gin.Context) {
-	var req getTicketDetailsRequest
+	var req getTicketPenaltiesRequest
 
 	if err := ctx.ShouldBindUri(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
