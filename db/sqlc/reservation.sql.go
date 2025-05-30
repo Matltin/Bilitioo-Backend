@@ -58,6 +58,35 @@ func (q *Queries) CreateReservation(ctx context.Context, arg CreateReservationPa
 	return i, err
 }
 
+const getIDReservation = `-- name: GetIDReservation :many
+SELECT r.id FROM "reservation" r
+INNER JOIN "payment" p ON p.id = r.payment_id
+WHERE p.id = $1
+`
+
+func (q *Queries) GetIDReservation(ctx context.Context, id int64) ([]int64, error) {
+	rows, err := q.db.QueryContext(ctx, getIDReservation, id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []int64{}
+	for rows.Next() {
+		var id int64
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getReservationStatus = `-- name: GetReservationStatus :one
 SELECT status FROM "reservation" 
 WHERE id = $1

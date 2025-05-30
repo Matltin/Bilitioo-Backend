@@ -1,6 +1,7 @@
 package api
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 
@@ -10,12 +11,11 @@ import (
 )
 
 type payPaymentRequest struct {
-	PaymentID         int64   `json:"payment_id" binding:"required"`
-	Reservations      []int64 `json:"reservations" binding:"required"`
-	Type              string  `json:"type" binding:"required,oneof=CASH CREDIT_CARD WALLET BANK_TRANSFER CRYPTO"`
-	PaymentStatus     string  `json:"payment_status" binding:"required,oneof=PENDING COMPLETED FAILED REFUNDED"`
-	ReservationStatus string  `json:"reservation_status" binding:"required,oneof=RESERVED RESERVING CANCELED CANCELED-BY-TIME"`
-	UserActivityID    int64  `json:"user_activity_id" binding:"required"`
+	PaymentID         int64  `json:"payment_id" binding:"required"`
+	Type              string `json:"type" binding:"required,oneof=CASH CREDIT_CARD WALLET BANK_TRANSFER CRYPTO"`
+	PaymentStatus     string `json:"payment_status" binding:"required,oneof=PENDING COMPLETED FAILED REFUNDED"`
+	ReservationStatus string `json:"reservation_status" binding:"required,oneof=RESERVED RESERVING CANCELED CANCELED-BY-TIME"`
+	UserActivityID    int64  `json:"user_activity_id"`
 }
 
 func (server *Server) payPayment(ctx *gin.Context) {
@@ -55,7 +55,13 @@ func (server *Server) payPayment(ctx *gin.Context) {
 	authPayload := ctx.MustGet(authorizationPyloadKey).(*token.Payload)
 	var reservations []db.UpdateReservationRow
 
-	for _, r := range req.Reservations {
+	reservationsID, err := server.Queries.GetIDReservation(context.Background(), req.PaymentID)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, errorResponse(err))
+		return
+	}
+
+	for _, r := range reservationsID {
 		status, err := server.Queries.GetReservationStatus(ctx, r)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
@@ -91,15 +97,18 @@ func (server *Server) payPayment(ctx *gin.Context) {
 
 	var user_activity db.UpdateUserActivityRow
 
-	argUserActivity := db.UpdateUserActivityParams{
-		ID:     req.UserActivityID,
-		Status: db.ActivityStatusPURCHASED,
-	}
+	if req.UserActivityID > 0 {
 
-	user_activity, err = server.Queries.UpdateUserActivity(ctx, argUserActivity)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+		argUserActivity := db.UpdateUserActivityParams{
+			ID:     req.UserActivityID,
+			Status: db.ActivityStatusPURCHASED,
+		}
+
+		user_activity, err = server.Queries.UpdateUserActivity(ctx, argUserActivity)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{

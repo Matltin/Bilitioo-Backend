@@ -28,6 +28,11 @@ RETURNING
     EXTRACT(EPOCH FROM duration_time)::bigint as duration_time_seconds,
     created_at;
 
+-- name: GetIDReservation :many
+SELECT r.id FROM "reservation" r
+INNER JOIN "payment" p ON p.id = r.payment_id
+WHERE p.id = $1;
+
 -- name: GetReservationStatus :one 
 SELECT status FROM "reservation" 
 WHERE id = $1;
