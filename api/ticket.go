@@ -207,7 +207,7 @@ func (server *Server) getAllUserNotCompletedTickets(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, tickets)
 }
 
-func (server *Server) GeetAllTickets(ctx *gin.Context) {
+func (server *Server) getAllTickets(ctx *gin.Context) {
 	tickets, err := server.Queries.GetAllTickets(ctx)
 	if err != nil {
 		if err == sql.ErrNoRows {

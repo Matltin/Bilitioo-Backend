@@ -2,6 +2,8 @@ package api
 
 import (
 	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 
@@ -79,6 +81,21 @@ func (server *Server) payPayment(ctx *gin.Context) {
 			return
 		}
 		reservations = append(reservations, reservation)
+
+		argTicket := db.UpdateTicketStatusParams{
+			ID:     reservation.ID,
+			Status: db.CheckReservationTicketStatus(req.ReservationStatus),
+		}
+
+		err = server.Queries.UpdateTicketStatus(ctx, argTicket)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				ctx.JSON(http.StatusNotFound, errorResponse(errors.New("reserved not found")))
+				return
+			}
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
 
 		argChangeReservation := db.CreateChangeReservationParams{
 			ReservationID: reservation.ID,
