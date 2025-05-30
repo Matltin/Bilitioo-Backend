@@ -14,3 +14,9 @@ SET
     "status" = $2
 WHERE id = $3
 RETURNING *;
+
+-- name: UpdatePaymentAmount :exec
+UPDATE "payment"
+SET 
+    "amount" = "amount" - $1
+WHERE id = $2;

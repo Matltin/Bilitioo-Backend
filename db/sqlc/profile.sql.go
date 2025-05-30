@@ -11,6 +11,22 @@ import (
 	"time"
 )
 
+const addToUserWallet = `-- name: AddToUserWallet :exec
+UPDATE "profile"
+SET wallet = wallet + $1
+WHERE user_id = $2
+`
+
+type AddToUserWalletParams struct {
+	Wallet int64 `json:"wallet"`
+	UserID int64 `json:"user_id"`
+}
+
+func (q *Queries) AddToUserWallet(ctx context.Context, arg AddToUserWalletParams) error {
+	_, err := q.db.ExecContext(ctx, addToUserWallet, arg.Wallet, arg.UserID)
+	return err
+}
+
 const getUserProfile = `-- name: GetUserProfile :one
 SELECT 
   u.id AS user_id,
@@ -77,7 +93,7 @@ SET
     "city_id" = COALESCE($5, "city_id"),
     "national_code" = COALESCE($6, "national_code")
 WHERE "user_id" = $1
-RETURNING user_id, pic_dir, first_name, last_name, city_id, national_code
+RETURNING user_id, pic_dir, first_name, last_name, city_id, wallet, national_code
 `
 
 type UpdateProfileParams struct {
@@ -105,6 +121,7 @@ func (q *Queries) UpdateProfile(ctx context.Context, arg UpdateProfileParams) (P
 		&i.FirstName,
 		&i.LastName,
 		&i.CityID,
+		&i.Wallet,
 		&i.NationalCode,
 	)
 	return i, err

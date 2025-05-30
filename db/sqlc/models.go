@@ -550,6 +550,8 @@ type Penalty struct {
 	ID          int64  `json:"id"`
 	VehicleID   int64  `json:"vehicle_id"`
 	PenaltyText string `json:"penalty_text"`
+	BeforDay    int32  `json:"befor_day"`
+	AfterDay    int32  `json:"after_day"`
 }
 
 type Profile struct {
@@ -558,6 +560,7 @@ type Profile struct {
 	FirstName    string `json:"first_name"`
 	LastName     string `json:"last_name"`
 	CityID       int64  `json:"city_id"`
+	Wallet       int64  `json:"wallet"`
 	NationalCode string `json:"national_code"`
 }
 

@@ -30,6 +30,7 @@ CREATE TABLE "profile" (
   "first_name" varchar NOT NULL DEFAULT '',
   "last_name" varchar  NOT NULL DEFAULT '',
   "city_id" bigint NOT NULL DEFAULT 1,
+  "wallet" bigint NOT NULL DEFAULT 0,
   "national_code" varchar NOT NULL DEFAULT ''
 );
 

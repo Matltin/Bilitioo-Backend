@@ -51,6 +51,11 @@ func (ser *Server) setupRouter() {
 
 	authRoutes.GET("/search-tickets", ser.searchTickets)
 
+	authRoutes.GET("/ticket-penalties/:ticket_id", ser.getTicketPenalties)
+
+	authRoutes.GET("/penalty/:ticket_id", ser.getTicketPenalties)
+	authRoutes.PUT("/penalty/:ticket_id", ser.cancelReservation)
+
 	ser.router = router
 }
 

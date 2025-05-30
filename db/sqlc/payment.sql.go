@@ -69,3 +69,20 @@ func (q *Queries) UpdatePayment(ctx context.Context, arg UpdatePaymentParams) (P
 	)
 	return i, err
 }
+
+const updatePaymentAmount = `-- name: UpdatePaymentAmount :exec
+UPDATE "payment"
+SET 
+    "amount" = "amount" - $1
+WHERE id = $2
+`
+
+type UpdatePaymentAmountParams struct {
+	Amount int64 `json:"amount"`
+	ID     int64 `json:"id"`
+}
+
+func (q *Queries) UpdatePaymentAmount(ctx context.Context, arg UpdatePaymentAmountParams) error {
+	_, err := q.db.ExecContext(ctx, updatePaymentAmount, arg.Amount, arg.ID)
+	return err
+}

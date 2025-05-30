@@ -28,3 +28,8 @@ SELECT
 FROM "user" u
 JOIN "profile" p ON u.id = p.user_id
 WHERE u.id = $1;
+
+-- name: AddToUserWallet :exec
+UPDATE "profile"
+SET wallet = wallet + $1
+WHERE user_id = $2;

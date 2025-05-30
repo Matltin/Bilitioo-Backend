@@ -10,6 +10,17 @@ import (
 	"time"
 )
 
+const cancelReservation = `-- name: CancelReservation :exec
+UPDATE "ticket"
+SET status = 'CANCELLED'
+WHERE id = $1 AND status = 'RESERVED'
+`
+
+func (q *Queries) CancelReservation(ctx context.Context, id int64) error {
+	_, err := q.db.ExecContext(ctx, cancelReservation, id)
+	return err
+}
+
 const createReservation = `-- name: CreateReservation :one
 INSERT INTO "reservation" (
     "user_id",
@@ -85,6 +96,39 @@ func (q *Queries) GetIDReservation(ctx context.Context, id int64) ([]int64, erro
 		return nil, err
 	}
 	return items, nil
+}
+
+const getReservationDetails = `-- name: GetReservationDetails :one
+SELECT
+    r.id,
+    r.payment_id,
+    t.amount, 
+    r.user_id,
+    t.status
+FROM "ticket" t
+INNER JOIN "reservation" r ON r.ticket_id = t.id 
+WHERE t.id = $1
+`
+
+type GetReservationDetailsRow struct {
+	ID        int64                        `json:"id"`
+	PaymentID int64                        `json:"payment_id"`
+	Amount    int64                        `json:"amount"`
+	UserID    int64                        `json:"user_id"`
+	Status    CheckReservationTicketStatus `json:"status"`
+}
+
+func (q *Queries) GetReservationDetails(ctx context.Context, id int64) (GetReservationDetailsRow, error) {
+	row := q.db.QueryRowContext(ctx, getReservationDetails, id)
+	var i GetReservationDetailsRow
+	err := row.Scan(
+		&i.ID,
+		&i.PaymentID,
+		&i.Amount,
+		&i.UserID,
+		&i.Status,
+	)
+	return i, err
 }
 
 const getReservationStatus = `-- name: GetReservationStatus :one
