@@ -7,6 +7,7 @@ import (
 	"time"
 
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"
+	"github.com/Matltin/Bilitioo-Backend/token"
 	"github.com/gin-gonic/gin"
 )
 
@@ -174,4 +175,47 @@ func (server *Server) getTicketDetails(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, response)
+}
+
+func (server *Server) getAllUserCompletedTickets(ctx *gin.Context) {
+	authPayload := ctx.MustGet(authorizationPyloadKey).(*token.Payload)
+	tickets, err := server.Queries.GetAllUserCompletedTickets(ctx, authPayload.UserID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(errors.New("reserved not found")))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, tickets)
+}
+
+func (server *Server) getAllUserNotCompletedTickets(ctx *gin.Context) {
+	authPayload := ctx.MustGet(authorizationPyloadKey).(*token.Payload)
+	tickets, err := server.Queries.GetAllUserNotCompletedTickets(ctx, authPayload.UserID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(errors.New("reserved not found")))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, tickets)
+}
+
+func (server *Server) GeetAllTickets(ctx *gin.Context) {
+	tickets, err := server.Queries.GetAllTickets(ctx)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(errors.New("reserved not found")))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, tickets)
 }

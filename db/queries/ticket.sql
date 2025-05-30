@@ -77,3 +77,44 @@ ORDER BY t.departure_time;
 -- name: GetTicket :one
 SELECT * FROM "ticket"
 WHERE id = $1;
+
+
+-- name: GetAllUserCompletedTickets :many
+SELECT 
+t.id,
+  oc.province,
+  dc.province,
+  re.status,
+  p.status
+FROM "reservation" re 
+INNER JOIN "payment" p ON p.id = re.payment_id
+INNER JOIN "ticket" t ON re.ticket_id = t.id
+INNER JOIN "route" ro ON t.route_id = ro.id
+INNER JOIN "city" oc ON oc.id = ro.origin_city_id
+INNER JOIN "city" dc ON dc.id = ro.destination_city_id
+WHERE p.status = 'COMPLETED' AND re.user_id = $1;
+
+-- name: GetAllUserNotCompletedTickets :many
+SELECT 
+t.id,
+  oc.province,
+  dc.province,
+  re.status,
+  p.status
+FROM "reservation" re 
+INNER JOIN "payment" p ON p.id = re.payment_id
+INNER JOIN "ticket" t ON re.ticket_id = t.id
+INNER JOIN "route" ro ON t.route_id = ro.id
+INNER JOIN "city" oc ON oc.id = ro.origin_city_id
+INNER JOIN "city" dc ON dc.id = ro.destination_city_id
+WHERE p.status != 'COMPLETED' AND re.user_id = $1;
+
+-- name: GetAllTickets :many
+SELECT * FROM "ticket"
+WHERE status != 'RESERVED';
+
+-- name: UpdateTicketStatus :exec
+UPDATE "ticket"
+SET status = $1
+WHERE id = $2;
+

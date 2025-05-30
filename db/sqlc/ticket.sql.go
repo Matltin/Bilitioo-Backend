@@ -12,6 +12,152 @@ import (
 	"time"
 )
 
+const getAllTickets = `-- name: GetAllTickets :many
+SELECT id, vehicle_id, seat_id, vehicle_type, route_id, amount, departure_time, arrival_time, count_stand, status, created_at FROM "ticket"
+WHERE status != 'RESERVED'
+`
+
+func (q *Queries) GetAllTickets(ctx context.Context) ([]Ticket, error) {
+	rows, err := q.db.QueryContext(ctx, getAllTickets)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Ticket{}
+	for rows.Next() {
+		var i Ticket
+		if err := rows.Scan(
+			&i.ID,
+			&i.VehicleID,
+			&i.SeatID,
+			&i.VehicleType,
+			&i.RouteID,
+			&i.Amount,
+			&i.DepartureTime,
+			&i.ArrivalTime,
+			&i.CountStand,
+			&i.Status,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getAllUserCompletedTickets = `-- name: GetAllUserCompletedTickets :many
+SELECT 
+t.id,
+  oc.province,
+  dc.province,
+  re.status,
+  p.status
+FROM "reservation" re 
+INNER JOIN "payment" p ON p.id = re.payment_id
+INNER JOIN "ticket" t ON re.ticket_id = t.id
+INNER JOIN "route" ro ON t.route_id = ro.id
+INNER JOIN "city" oc ON oc.id = ro.origin_city_id
+INNER JOIN "city" dc ON dc.id = ro.destination_city_id
+WHERE p.status = 'COMPLETED' AND re.user_id = $1
+`
+
+type GetAllUserCompletedTicketsRow struct {
+	ID         int64         `json:"id"`
+	Province   string        `json:"province"`
+	Province_2 string        `json:"province_2"`
+	Status     TicketStatus  `json:"status"`
+	Status_2   PaymentStatus `json:"status_2"`
+}
+
+func (q *Queries) GetAllUserCompletedTickets(ctx context.Context, userID int64) ([]GetAllUserCompletedTicketsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAllUserCompletedTickets, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetAllUserCompletedTicketsRow{}
+	for rows.Next() {
+		var i GetAllUserCompletedTicketsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Province,
+			&i.Province_2,
+			&i.Status,
+			&i.Status_2,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getAllUserNotCompletedTickets = `-- name: GetAllUserNotCompletedTickets :many
+SELECT 
+t.id,
+  oc.province,
+  dc.province,
+  re.status,
+  p.status
+FROM "reservation" re 
+INNER JOIN "payment" p ON p.id = re.payment_id
+INNER JOIN "ticket" t ON re.ticket_id = t.id
+INNER JOIN "route" ro ON t.route_id = ro.id
+INNER JOIN "city" oc ON oc.id = ro.origin_city_id
+INNER JOIN "city" dc ON dc.id = ro.destination_city_id
+WHERE p.status != 'COMPLETED' AND re.user_id = $1
+`
+
+type GetAllUserNotCompletedTicketsRow struct {
+	ID         int64         `json:"id"`
+	Province   string        `json:"province"`
+	Province_2 string        `json:"province_2"`
+	Status     TicketStatus  `json:"status"`
+	Status_2   PaymentStatus `json:"status_2"`
+}
+
+func (q *Queries) GetAllUserNotCompletedTickets(ctx context.Context, userID int64) ([]GetAllUserNotCompletedTicketsRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAllUserNotCompletedTickets, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetAllUserNotCompletedTicketsRow{}
+	for rows.Next() {
+		var i GetAllUserNotCompletedTicketsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Province,
+			&i.Province_2,
+			&i.Status,
+			&i.Status_2,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getTicket = `-- name: GetTicket :one
 SELECT id, vehicle_id, seat_id, vehicle_type, route_id, amount, departure_time, arrival_time, count_stand, status, created_at FROM "ticket"
 WHERE id = $1
@@ -235,4 +381,20 @@ func (q *Queries) SearchTickets(ctx context.Context, arg SearchTicketsParams) ([
 		return nil, err
 	}
 	return items, nil
+}
+
+const updateTicketStatus = `-- name: UpdateTicketStatus :exec
+UPDATE "ticket"
+SET status = $1
+WHERE id = $2
+`
+
+type UpdateTicketStatusParams struct {
+	Status CheckReservationTicketStatus `json:"status"`
+	ID     int64                        `json:"id"`
+}
+
+func (q *Queries) UpdateTicketStatus(ctx context.Context, arg UpdateTicketStatusParams) error {
+	_, err := q.db.ExecContext(ctx, updateTicketStatus, arg.Status, arg.ID)
+	return err
 }
