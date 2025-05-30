@@ -134,6 +134,8 @@ func (server *Server) updateTicketByReport(ctx *gin.Context) {
 			server.chageWithOutAdd(ctx, ch)
 		}
 	}
+
+	ctx.JSON(http.StatusOK, nil)
 }
 
 type change struct {
