@@ -16,7 +16,7 @@ const (
 )
 
 type createReservationRequest struct {
-	Tickets []int64 `json:"tickets"`
+	Tickets []int64 `json:"tickets" binding:"required"`
 }
 
 func (server *Server) createReservation(ctx *gin.Context) {

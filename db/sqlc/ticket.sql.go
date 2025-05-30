@@ -104,55 +104,96 @@ func (q *Queries) GetTicketDetails(ctx context.Context, id int64) (GetTicketDeta
 }
 
 const searchTickets = `-- name: SearchTickets :many
+
 SELECT 
-    t.id,
-    t.vehicle_id,
-    t.seat_id,
-    t.vehicle_type,
-    t.route_id,
-    t.amount,
-    to_char(t.departure_time, 'YYYY-MM-DD HH24:MI') as departure_time,
-    to_char(t.arrival_time, 'YYYY-MM-DD HH24:MI') as arrival_time,
-    t.count_stand,
-    t.status
+  t.id, t.vehicle_id, t.seat_id, t.vehicle_type, t.route_id, 
+  t.amount, t.departure_time, t.arrival_time, t.count_stand, 
+  t.status, t.created_at,
+  r.origin_city_id, r.destination_city_id,
+  v.capacity, v.feature,
+  c.name as company_name,
+  orig_city.province as origin_province,
+  orig_city.county as origin_county,
+  dest_city.province as destination_province,
+  dest_city.county as destination_county
 FROM ticket t
 JOIN route r ON t.route_id = r.id
-WHERE
-    ($1::bigint IS NULL OR r.origin_city_id = $1)
-    AND ($2::bigint IS NULL OR r.destination_city_id = $2)
-    AND ($3::date IS NULL OR t.departure_time::date = $3::date)
-    AND ($4::vehicle_type IS NULL OR t.vehicle_type = $4)
-    AND t.status = 'NOT_RESERVED'
-ORDER BY t.departure_time ASC
-LIMIT 50
+JOIN vehicle v ON t.vehicle_id = v.id
+JOIN company c ON v.company_id = c.id
+JOIN city orig_city ON r.origin_city_id = orig_city.id
+JOIN city dest_city ON r.destination_city_id = dest_city.id
+WHERE r.origin_city_id = $1
+  AND r.destination_city_id = $2
+  AND t.departure_time >= $3
+  AND t.departure_time < $4
+  AND t.vehicle_type = $5::vehicle_type
+  AND t.status = 'NOT_RESERVED'
+ORDER BY t.departure_time
 `
 
 type SearchTicketsParams struct {
-	Column1 int64       `json:"column_1"`
-	Column2 int64       `json:"column_2"`
-	Column3 time.Time   `json:"column_3"`
-	Column4 VehicleType `json:"column_4"`
+	OriginCityID      int64       `json:"origin_city_id"`
+	DestinationCityID int64       `json:"destination_city_id"`
+	DepartureTime     time.Time   `json:"departure_time"`
+	DepartureTime_2   time.Time   `json:"departure_time_2"`
+	Column5           VehicleType `json:"column_5"`
 }
 
 type SearchTicketsRow struct {
-	ID            int64                        `json:"id"`
-	VehicleID     int64                        `json:"vehicle_id"`
-	SeatID        int64                        `json:"seat_id"`
-	VehicleType   VehicleType                  `json:"vehicle_type"`
-	RouteID       int64                        `json:"route_id"`
-	Amount        int64                        `json:"amount"`
-	DepartureTime string                       `json:"departure_time"`
-	ArrivalTime   string                       `json:"arrival_time"`
-	CountStand    int32                        `json:"count_stand"`
-	Status        CheckReservationTicketStatus `json:"status"`
+	ID                  int64                        `json:"id"`
+	VehicleID           int64                        `json:"vehicle_id"`
+	SeatID              int64                        `json:"seat_id"`
+	VehicleType         VehicleType                  `json:"vehicle_type"`
+	RouteID             int64                        `json:"route_id"`
+	Amount              int64                        `json:"amount"`
+	DepartureTime       time.Time                    `json:"departure_time"`
+	ArrivalTime         time.Time                    `json:"arrival_time"`
+	CountStand          int32                        `json:"count_stand"`
+	Status              CheckReservationTicketStatus `json:"status"`
+	CreatedAt           time.Time                    `json:"created_at"`
+	OriginCityID        int64                        `json:"origin_city_id"`
+	DestinationCityID   int64                        `json:"destination_city_id"`
+	Capacity            int32                        `json:"capacity"`
+	Feature             json.RawMessage              `json:"feature"`
+	CompanyName         string                       `json:"company_name"`
+	OriginProvince      string                       `json:"origin_province"`
+	OriginCounty        string                       `json:"origin_county"`
+	DestinationProvince string                       `json:"destination_province"`
+	DestinationCounty   string                       `json:"destination_county"`
 }
 
+// SELECT
+//
+//	t.id,
+//	t.vehicle_id,
+//	t.seat_id,
+//	t.vehicle_type,
+//	t.route_id,
+//	t.amount,
+//	to_char(t.departure_time, 'YYYY-MM-DD HH24:MI') as departure_time,
+//	to_char(t.arrival_time, 'YYYY-MM-DD HH24:MI') as arrival_time,
+//	t.count_stand,
+//	t.status
+//
+// FROM ticket t
+// JOIN route r ON t.route_id = r.id
+// WHERE
+//
+//	($1::bigint IS NULL OR r.origin_city_id = $1)
+//	AND ($2::bigint IS NULL OR r.destination_city_id = $2)
+//	AND ($3::date IS NULL OR t.departure_time::date = $3::date)
+//	AND ($4::vehicle_type IS NULL OR t.vehicle_type = $4)
+//	AND t.status = 'NOT_RESERVED'
+//
+// ORDER BY t.departure_time ASC
+// LIMIT 50;
 func (q *Queries) SearchTickets(ctx context.Context, arg SearchTicketsParams) ([]SearchTicketsRow, error) {
 	rows, err := q.db.QueryContext(ctx, searchTickets,
-		arg.Column1,
-		arg.Column2,
-		arg.Column3,
-		arg.Column4,
+		arg.OriginCityID,
+		arg.DestinationCityID,
+		arg.DepartureTime,
+		arg.DepartureTime_2,
+		arg.Column5,
 	)
 	if err != nil {
 		return nil, err
@@ -172,6 +213,16 @@ func (q *Queries) SearchTickets(ctx context.Context, arg SearchTicketsParams) ([
 			&i.ArrivalTime,
 			&i.CountStand,
 			&i.Status,
+			&i.CreatedAt,
+			&i.OriginCityID,
+			&i.DestinationCityID,
+			&i.Capacity,
+			&i.Feature,
+			&i.CompanyName,
+			&i.OriginProvince,
+			&i.OriginCounty,
+			&i.DestinationProvince,
+			&i.DestinationCounty,
 		); err != nil {
 			return nil, err
 		}

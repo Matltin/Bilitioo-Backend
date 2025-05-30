@@ -3,7 +3,6 @@ package api
 import (
 	"database/sql"
 	"errors"
-	"log"
 	"net/http"
 	"time"
 
@@ -11,76 +10,123 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type SearchTicketsRequest struct {
-	OriginCityID      int64  `form:"origin_city_id"`      // اختیاری
-	DestinationCityID int64  `form:"destination_city_id"` // اختیاری
-	DepartureDate     string `form:"departure_date"`      // تاریخ به صورت string گرفته میشه، بعداً تبدیل می‌کنیم
-	VehicleType       string `form:"vehicle_type"`        // اختیاری
+// type SearchTicketsRequest struct {
+// 	OriginCityID      *int64          `form:"origin_city_id"`
+// 	DestinationCityID *int64          `form:"destination_city_id"`
+// 	DepartureDate     *string         `form:"departure_date"`
+// 	VehicleType       *db.VehicleType `form:"vehicle_type"`
+// }
+
+// func (server *Server) searchTickets(ctx *gin.Context) {
+// 	var req SearchTicketsRequest
+
+// 	if err := ctx.ShouldBindQuery(&req); err != nil {
+// 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+// 		return
+// 	}
+
+// 	// تبدیل تاریخ به time.Time اگر داده شده بود
+// 	var departureDate *time.Time
+// 	if req.DepartureDate != nil {
+// 		parsedDate, err := time.Parse("2006-01-02", *req.DepartureDate)
+// 		if err != nil {
+// 			ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid date format. Use YYYY-MM-DD")))
+// 			return
+// 		}
+// 		departureDate = &parsedDate
+// 	}
+
+// 	// مقداردهی پیش‌فرض برای پارامترهای NULL
+// 	var originCityID, destinationCityID sql.NullInt64
+
+// 	if req.OriginCityID != nil {
+// 		originCityID = sql.NullInt64{Int64: *req.OriginCityID, Valid: true}
+// 	}
+// 	if req.DestinationCityID != nil {
+// 		destinationCityID = sql.NullInt64{Int64: *req.DestinationCityID, Valid: true}
+// 	}
+
+// 	params := db.SearchTicketsParams{
+// 		Column1: originCityID.Int64,
+// 		Column2: destinationCityID.Int64,
+// 		Column3: time.Time{},
+// 		Column4: *req.VehicleType,
+// 	}
+
+// 	if departureDate != nil {
+// 		params.Column3 = *departureDate // dereference the pointer
+// 	}
+
+// 	tickets, err := server.Queries.SearchTickets(ctx, params)
+// 	if err != nil {
+// 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+// 		return
+// 	}
+
+// 	ctx.JSON(http.StatusOK, tickets)
+// }
+
+// func getInt64OrDefault(p *int64) int64 {
+// 	if p != nil {
+// 		return *p
+// 	}
+// 	return 0
+// }
+
+// func getTimeOrDefault(t *time.Time) time.Time {
+// 	if t != nil {
+// 		return *t
+// 	}
+// 	return time.Time{}
+// }
+
+// func getVehicleTypeOrDefault(vt *string) db.VehicleType {
+// 	if vt != nil {
+// 		return db.VehicleType(*vt)
+// 	}
+// 	return "" // یا مقدار default
+// }
+
+type searchTicketsRequest struct {
+	OriginCityID      int64  `json:"origin_city_id" binding:"required"`
+	DestinationCityID int64  `json:"destination_city_id" binding:"required"`
+	DepartureDate     string `json:"departure_date" binding:"required"`
+	VehicleType       string `json:"vehicle_type" binding:"required,oneof=BUS TRAIN AIRPLANE"`
 }
 
 func (server *Server) searchTickets(ctx *gin.Context) {
-	var req SearchTicketsRequest
-
+	var req searchTicketsRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
 
-	// تبدیل تاریخ به time.Time اگر داده شده بود
-	var departureDate time.Time
-	if req.DepartureDate != "" {
-		parsedDate, err := time.Parse("2006-01-02", req.DepartureDate)
-		if err != nil {
-			ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid date format. Use YYYY-MM-DD")))
-			return
-		}
-		departureDate = parsedDate
-	}
-
-	// params := db.SearchTicketsParams{
-	// 	Column1: getInt64OrDefault(req.OriginCityID),
-	// 	Column2: getInt64OrDefault(req.DestinationCityID),
-	// 	Column3: getTimeOrDefault(departureDate),
-	// 	Column4: getVehicleTypeOrDefault(req.VehicleType),
-	// }
-
-	params := db.SearchTicketsParams{
-		Column1: req.OriginCityID,
-		Column2: req.DestinationCityID,
-		Column3: departureDate,
-		Column4: db.VehicleType(req.VehicleType),
-	}
-
-	log.Println("\n\n", params, "\n\n")
-
-	tickets, err := server.Queries.SearchTickets(ctx, params)
+	// Parse departure date
+	departureDate, err := time.Parse("2006-01-02", req.DepartureDate)
 	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, gin.H{"error": "Database error"})
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid date format, expected YYYY-MM-DD")))
+		return
+	}
+
+	// Calculate date range
+	startOfDay := time.Date(departureDate.Year(), departureDate.Month(), departureDate.Day(), 0, 0, 0, 0, time.UTC)
+	endOfDay := startOfDay.Add(24 * time.Hour)
+
+	arg := db.SearchTicketsParams{
+		OriginCityID:      req.OriginCityID,
+		DestinationCityID: req.DestinationCityID,
+		DepartureTime:     startOfDay,
+		DepartureTime_2:   endOfDay,
+		Column5:           db.VehicleType(req.VehicleType),
+	}
+
+	tickets, err := server.Queries.SearchTickets(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
 
 	ctx.JSON(http.StatusOK, tickets)
-}
-
-func getInt64OrDefault(p *int64) int64 {
-	if p != nil {
-		return *p
-	}
-	return 0
-}
-
-func getTimeOrDefault(t *time.Time) time.Time {
-	if t != nil {
-		return *t
-	}
-	return time.Time{}
-}
-
-func getVehicleTypeOrDefault(vt *string) db.VehicleType {
-	if vt != nil {
-		return db.VehicleType(*vt)
-	}
-	return "" // یا مقدار default
 }
 
 type getTicketDetailsRequest struct {

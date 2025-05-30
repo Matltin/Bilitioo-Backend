@@ -10,11 +10,12 @@ import (
 )
 
 type payPaymentRequest struct {
-	PaymentID         int64   `json:"payment_id"`
-	Reservations      []int64 `json:"reservations"`
-	Type              string  `json:"type"`
-	PaymentStatus     string  `json:"payment_status"`
-	ReservationStatus string  `json:"reservation_status"`
+	PaymentID         int64   `json:"payment_id" binding:"required"`
+	Reservations      []int64 `json:"reservations" binding:"required"`
+	Type              string  `json:"type" binding:"required,oneof=CASH CREDIT_CARD WALLET BANK_TRANSFER CRYPTO"`
+	PaymentStatus     string  `json:"payment_status" binding:"required,oneof=PENDING COMPLETED FAILED REFUNDED"`
+	ReservationStatus string  `json:"reservation_status" binding:"required,oneof=RESERVED RESERVING CANCELED CANCELED-BY-TIME"`
+	UserActivityID    int64  `json:"user_activity_id" binding:"required"`
 }
 
 func (server *Server) payPayment(ctx *gin.Context) {
@@ -90,18 +91,15 @@ func (server *Server) payPayment(ctx *gin.Context) {
 
 	var user_activity db.UpdateUserActivityRow
 
-	idValue, exists := ctx.Get(userActivityID)
-	if exists {
-		argUserActivity := db.UpdateUserActivityParams{
-			ID:     idValue.(int64),
-			Status: db.ActivityStatusPURCHASED,
-		}
+	argUserActivity := db.UpdateUserActivityParams{
+		ID:     req.UserActivityID,
+		Status: db.ActivityStatusPURCHASED,
+	}
 
-		user_activity, err = server.Queries.UpdateUserActivity(ctx, argUserActivity)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-			return
-		}
+	user_activity, err = server.Queries.UpdateUserActivity(ctx, argUserActivity)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
 	}
 
 	ctx.JSON(http.StatusOK, gin.H{

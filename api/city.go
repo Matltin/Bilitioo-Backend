@@ -25,32 +25,19 @@ func (server *Server) getCities(ctx *gin.Context) {
 		return
 	}
 
-	var response []CityResponse
-	for _, city := range cities {
-		response = append(response, CityResponse{
-			Province: city.Province,
-			County:   city.County,
-		})
-	}
-
-	ctx.JSON(http.StatusOK, response)
+	ctx.JSON(http.StatusOK, cities)
 }
 
 type searchTicketsByCitiesRequest struct {
-	OriginCityID      int64  `json:"origin_city_id"`
-	DestinationCityID int64  `json:"destination_city_id"`
-	VehicleType       string `json:"vehicle_type"`
+	OriginCityID      int64  `json:"origin_city_id" binding:"required"`
+	DestinationCityID int64  `json:"destination_city_id" binding:"required"`
+	VehicleType       string `json:"vehicle_type" binding:"required,oneof=BUS AIRPLANE TRAIN"`
 }
 
 func (server *Server) searchTicketsByCities(ctx *gin.Context) {
 	var req searchTicketsByCitiesRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
-
-	if !(req.VehicleType == "BUS" || req.VehicleType == "AIRPLANE" || req.VehicleType == "TRAIN") {
-		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid vehicle type")))
 		return
 	}
 
@@ -98,5 +85,8 @@ func (server *Server) searchTicketsByCities(ctx *gin.Context) {
 
 	ctx.Set(userActivityID, userActivity.ID)
 
-	ctx.JSON(http.StatusOK, tickets)
+	ctx.JSON(http.StatusOK, gin.H{
+		"tickets": tickets,
+		userActivityID: userActivity.ID,
+	})
 }
