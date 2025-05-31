@@ -3,7 +3,6 @@ package api
 import (
 	"database/sql"
 	"errors"
-	"log"
 	"net/http"
 	"regexp"
 
@@ -134,8 +133,6 @@ func (server *Server) logInUser(ctx *gin.Context) {
 		return
 	}
 	err = util.CheckPassword(req.Password, user.HashedPassword)
-	a, b := util.HashedPassword(req.Password)
-	log.Println("\n", err, "\n", user.HashedPassword, "\n", a, "\n", b, "\n")
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
 		return
