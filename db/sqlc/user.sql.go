@@ -102,19 +102,26 @@ const updateUserContact = `-- name: UpdateUserContact :one
 UPDATE "user"
 SET
   email = COALESCE($2, email),
-  phone_number = COALESCE($3, phone_number)
+  phone_number = COALESCE($3, phone_number),
+  hashed_password = COALESCE($4, hashed_password)
 WHERE id = $1
 RETURNING id, email, phone_number, hashed_password, password_change_at, role, status, phone_verified, email_verified, created_at
 `
 
 type UpdateUserContactParams struct {
-	ID          int64          `json:"id"`
-	Email       sql.NullString `json:"email"`
-	PhoneNumber sql.NullString `json:"phone_number"`
+	ID             int64          `json:"id"`
+	Email          sql.NullString `json:"email"`
+	PhoneNumber    sql.NullString `json:"phone_number"`
+	HashedPassword sql.NullString `json:"hashed_password"`
 }
 
 func (q *Queries) UpdateUserContact(ctx context.Context, arg UpdateUserContactParams) (User, error) {
-	row := q.db.QueryRowContext(ctx, updateUserContact, arg.ID, arg.Email, arg.PhoneNumber)
+	row := q.db.QueryRowContext(ctx, updateUserContact,
+		arg.ID,
+		arg.Email,
+		arg.PhoneNumber,
+		arg.HashedPassword,
+	)
 	var i User
 	err := row.Scan(
 		&i.ID,

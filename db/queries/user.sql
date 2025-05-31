@@ -26,6 +26,7 @@ INSERT INTO "profile" (
 UPDATE "user"
 SET
   email = COALESCE(sqlc.narg(email), email),
-  phone_number = COALESCE(sqlc.narg(phone_number), phone_number)
+  phone_number = COALESCE(sqlc.narg(phone_number), phone_number),
+  hashed_password = COALESCE(sqlc.narg(hashed_password), hashed_password)
 WHERE id = $1
 RETURNING *;

@@ -7,6 +7,7 @@ import (
 
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"
 	"github.com/Matltin/Bilitioo-Backend/token"
+	"github.com/Matltin/Bilitioo-Backend/util"
 	"github.com/gin-gonic/gin"
 )
 
@@ -17,6 +18,7 @@ type updateProfileRequest struct {
 	CityID       int64  `json:"city_id"`
 	NationalCode string `json:"national_code"`
 	PhoneNumber  string `json:"phone_number"`
+	Password     string `json:"password"`
 	Email        string `json:"email"`
 }
 
@@ -38,6 +40,18 @@ func (server *Server) updateProfile(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid phone number format. It must start with 09 and be 11 digits long")))
 		return
 	}
+
+	var newPass string = ""
+
+	if req.Password != "" {
+		var err error
+		newPass, err = util.HashedPassword(req.Password)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+	}
+
 	profileArgs := db.UpdateProfileParams{
 		UserID: authPayload.UserID,
 		PicDir: sql.NullString{
@@ -77,6 +91,10 @@ func (server *Server) updateProfile(ctx *gin.Context) {
 		PhoneNumber: sql.NullString{
 			String: req.PhoneNumber,
 			Valid:  req.PhoneNumber != "",
+		},
+		HashedPassword: sql.NullString{
+			String: newPass,
+			Valid:  req.Password != "",
 		},
 	}
 
