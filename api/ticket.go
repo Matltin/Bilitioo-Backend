@@ -160,6 +160,7 @@ func (server *Server) getTicketDetails(ctx *gin.Context) {
 		"capacity":      ticket.Capacity,
 		"vehicle_type":  ticket.VehicleType,
 		"feature":       ticket.Feature,
+		"status":        ticket.Status,
 	}
 
 	switch ticket.VehicleType {

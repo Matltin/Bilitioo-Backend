@@ -50,5 +50,5 @@ WHERE t.id = $1;
 
 -- name: CancelReservation :exec
 UPDATE "ticket"
-SET status = 'CANCELLED'
+SET status = 'NOT_RESERVED'
 WHERE id = $1 AND status = 'RESERVED';
