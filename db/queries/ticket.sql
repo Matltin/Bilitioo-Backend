@@ -9,6 +9,7 @@ SELECT
     v.vehicle_type,
     v.feature,
     b."VIP",
+    t.status,
     b.bed_chair,
     tr.rank,
     tr.have_compartment,

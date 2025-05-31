@@ -351,7 +351,7 @@ ALTER TABLE "change_reservation"
 ADD CONSTRAINT change_reservation_user_id_fkey
 FOREIGN KEY ("user_id") REFERENCES "user"("id") ON DELETE CASCADE;
 
-ALTER TABLE "payment" ADD CONSTRAINT amount_payment_validation CHECK (amount > 0);
+ALTER TABLE "payment" ADD CONSTRAINT amount_payment_validation CHECK (amount >= 0);
 
 ALTER TABLE "report"
 ADD CONSTRAINT report_reservation_id_fkey

@@ -65,6 +65,8 @@ func (ser *Server) setupRouter() {
 	authRoutes.GET("/notcompleted-tickets", ser.getAllUserNotCompletedTickets)
 	authRoutes.GET("/tickets", ser.getAllTickets)
 
+	authRoutes.POST("/report", ser.createReport)
+
 	ser.router = router
 }
 

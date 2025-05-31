@@ -193,6 +193,7 @@ SELECT
     v.vehicle_type,
     v.feature,
     b."VIP",
+    t.status,
     b.bed_chair,
     tr.rank,
     tr.have_compartment,
@@ -211,20 +212,21 @@ WHERE t.id = $1
 `
 
 type GetTicketDetailsRow struct {
-	Origin          string          `json:"origin"`
-	Destination     string          `json:"destination"`
-	DepartureTime   time.Time       `json:"departure_time"`
-	ArrivalTime     time.Time       `json:"arrival_time"`
-	Amount          int64           `json:"amount"`
-	Capacity        int32           `json:"capacity"`
-	VehicleType     VehicleType     `json:"vehicle_type"`
-	Feature         json.RawMessage `json:"feature"`
-	VIP             sql.NullBool    `json:"VIP"`
-	BedChair        sql.NullBool    `json:"bed_chair"`
-	Rank            sql.NullInt32   `json:"rank"`
-	HaveCompartment sql.NullBool    `json:"have_compartment"`
-	FlightClass     NullFlightClass `json:"flight_class"`
-	AirplaneName    sql.NullString  `json:"airplane_name"`
+	Origin          string                       `json:"origin"`
+	Destination     string                       `json:"destination"`
+	DepartureTime   time.Time                    `json:"departure_time"`
+	ArrivalTime     time.Time                    `json:"arrival_time"`
+	Amount          int64                        `json:"amount"`
+	Capacity        int32                        `json:"capacity"`
+	VehicleType     VehicleType                  `json:"vehicle_type"`
+	Feature         json.RawMessage              `json:"feature"`
+	VIP             sql.NullBool                 `json:"VIP"`
+	Status          CheckReservationTicketStatus `json:"status"`
+	BedChair        sql.NullBool                 `json:"bed_chair"`
+	Rank            sql.NullInt32                `json:"rank"`
+	HaveCompartment sql.NullBool                 `json:"have_compartment"`
+	FlightClass     NullFlightClass              `json:"flight_class"`
+	AirplaneName    sql.NullString               `json:"airplane_name"`
 }
 
 func (q *Queries) GetTicketDetails(ctx context.Context, id int64) (GetTicketDetailsRow, error) {
@@ -240,6 +242,7 @@ func (q *Queries) GetTicketDetails(ctx context.Context, id int64) (GetTicketDeta
 		&i.VehicleType,
 		&i.Feature,
 		&i.VIP,
+		&i.Status,
 		&i.BedChair,
 		&i.Rank,
 		&i.HaveCompartment,

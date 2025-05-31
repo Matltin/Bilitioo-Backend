@@ -76,7 +76,7 @@ func (server *Server) cancelReservation(ctx *gin.Context) {
 	}
 
 	if reservation.Status != "RESERVED" {
-		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("رزرو در وضعیت قابل کنسل نیست")))
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("ticket already is not-reserved")))
 		return
 	}
 
