@@ -116,7 +116,7 @@ func (server *Server) getAllUserReservation(ctx *gin.Context) {
 
 func (server *Server) getCompletedUserReservation(ctx *gin.Context) {
 	authPayload := ctx.MustGet(authorizationPyloadKey).(*token.Payload)
-	reservations, err := server.Queries.GetAllUserNotCompletedTickets(ctx, authPayload.UserID)
+	reservations, err := server.Queries.GetCompletedUserReservation(ctx, authPayload.UserID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
