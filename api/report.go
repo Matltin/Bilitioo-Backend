@@ -35,9 +35,12 @@ func (server *Server) answerReport(ctx *gin.Context) {
 		return
 	}
 
+	authPayload := ctx.MustGet(authorizationPyloadKey).(*token.Payload)
+
 	arg := db.AnswerReportParams{
 		ResponseText: req.ResponseText,
 		ID:           req.ID,
+		AdminID:      authPayload.UserID,
 	}
 
 	report, err := server.Queries.AnswerReport(ctx, arg)
@@ -213,4 +216,35 @@ func (server *Server) chageWithOutAdd(ctx *gin.Context, ch change) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+}
+
+type createReportRequest struct {
+	RequestText   string `json:"request_text"`
+	RequestType   string `json:"request_type"`
+	ReservationID int64  `json:"reservation_id"`
+}
+
+func (server *Server) createReport(ctx *gin.Context) {
+	var req createReportRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	authPayload := ctx.MustGet(authorizationPyloadKey).(*token.Payload)
+
+	arg := db.CreateReportParams{
+		ReservationID: req.ReservationID,
+		RequestType: db.RequestType(req.RequestType),
+		RequestText: req.RequestText,
+		UserID: authPayload.UserID,
+	}
+	
+	report, err := server.Queries.CreateReport(ctx, arg)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, report)
 }

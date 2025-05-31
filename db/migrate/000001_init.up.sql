@@ -311,7 +311,7 @@ CREATE TABLE "report" (
   "id" bigserial PRIMARY KEY,
   "reservation_id" bigint NOT NULL,
   "user_id" bigint NOT NULL,
-  "admin_id" bigint NOT NULL,
+  "admin_id" bigint NOT NULL DEFAULT 1,
   "request_type" request_type NOT NULL DEFAULT 'ETC.',
   "request_text" text NOT NULL,
   "response_text" text NOT NULL

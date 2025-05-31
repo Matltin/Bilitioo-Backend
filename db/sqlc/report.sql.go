@@ -11,18 +11,60 @@ import (
 
 const answerReport = `-- name: AnswerReport :one
 UPDATE "report"
-SET response_text = $1
-WHERE id = $2
+SET 
+    response_text = $1,
+    admin_id = $2
+WHERE id = $3
 RETURNING id, reservation_id, user_id, admin_id, request_type, request_text, response_text
 `
 
 type AnswerReportParams struct {
 	ResponseText string `json:"response_text"`
+	AdminID      int64  `json:"admin_id"`
 	ID           int64  `json:"id"`
 }
 
 func (q *Queries) AnswerReport(ctx context.Context, arg AnswerReportParams) (Report, error) {
-	row := q.db.QueryRowContext(ctx, answerReport, arg.ResponseText, arg.ID)
+	row := q.db.QueryRowContext(ctx, answerReport, arg.ResponseText, arg.AdminID, arg.ID)
+	var i Report
+	err := row.Scan(
+		&i.ID,
+		&i.ReservationID,
+		&i.UserID,
+		&i.AdminID,
+		&i.RequestType,
+		&i.RequestText,
+		&i.ResponseText,
+	)
+	return i, err
+}
+
+const createReport = `-- name: CreateReport :one
+INSERT INTO "report" (
+    "reservation_id",
+    "user_id",
+    "request_type",
+    "request_text"
+)
+VALUES (
+    $1, $2, $3, $4
+) RETURNING id, reservation_id, user_id, admin_id, request_type, request_text, response_text
+`
+
+type CreateReportParams struct {
+	ReservationID int64       `json:"reservation_id"`
+	UserID        int64       `json:"user_id"`
+	RequestType   RequestType `json:"request_type"`
+	RequestText   string      `json:"request_text"`
+}
+
+func (q *Queries) CreateReport(ctx context.Context, arg CreateReportParams) (Report, error) {
+	row := q.db.QueryRowContext(ctx, createReport,
+		arg.ReservationID,
+		arg.UserID,
+		arg.RequestType,
+		arg.RequestText,
+	)
 	var i Report
 	err := row.Scan(
 		&i.ID,
