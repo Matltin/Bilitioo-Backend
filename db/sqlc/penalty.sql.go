@@ -9,38 +9,22 @@ import (
 	"context"
 )
 
-const getTicketPenalties = `-- name: GetTicketPenalties :many
+const getTicketPenalties = `-- name: GetTicketPenalties :one
 SELECT p.id, p.vehicle_id, p.penalty_text, p.befor_day, p.after_day 
 FROM penalty p
 JOIN ticket t ON p.vehicle_id = t.vehicle_id
 WHERE t.id = $1
 `
 
-func (q *Queries) GetTicketPenalties(ctx context.Context, id int64) ([]Penalty, error) {
-	rows, err := q.db.QueryContext(ctx, getTicketPenalties, id)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []Penalty{}
-	for rows.Next() {
-		var i Penalty
-		if err := rows.Scan(
-			&i.ID,
-			&i.VehicleID,
-			&i.PenaltyText,
-			&i.BeforDay,
-			&i.AfterDay,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
+func (q *Queries) GetTicketPenalties(ctx context.Context, id int64) (Penalty, error) {
+	row := q.db.QueryRowContext(ctx, getTicketPenalties, id)
+	var i Penalty
+	err := row.Scan(
+		&i.ID,
+		&i.VehicleID,
+		&i.PenaltyText,
+		&i.BeforDay,
+		&i.AfterDay,
+	)
+	return i, err
 }

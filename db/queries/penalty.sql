@@ -1,4 +1,4 @@
--- name: GetTicketPenalties :many
+-- name: GetTicketPenalties :one
 SELECT p.* 
 FROM penalty p
 JOIN ticket t ON p.vehicle_id = t.vehicle_id

@@ -59,13 +59,12 @@ func (ser *Server) setupRouter() {
 
 	authRoutes.GET("/report", ser.getReports)
 	authRoutes.PUT("/report", ser.answerReport)
+	authRoutes.POST("/report", ser.createReport)
 	authRoutes.PUT("/manage-report", ser.updateTicketByReport)
 
 	authRoutes.GET("/completed-tickets", ser.getAllUserCompletedTickets)
 	authRoutes.GET("/notcompleted-tickets", ser.getAllUserNotCompletedTickets)
 	authRoutes.GET("/tickets", ser.getAllTickets)
-
-	authRoutes.POST("/report", ser.createReport)
 
 	ser.router = router
 }

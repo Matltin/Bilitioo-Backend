@@ -3,8 +3,8 @@ package api
 import (
 	"database/sql"
 	"errors"
-	"log"
 	"net/http"
+	"time"
 
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"
 	"github.com/Matltin/Bilitioo-Backend/token"
@@ -68,8 +68,6 @@ func (server *Server) cancelReservation(ctx *gin.Context) {
 		return
 	}
 
-	log.Println("reservation:", reservation)
-
 	if reservation.UserID != authPayload.UserID {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(errors.New("don't have the peremision")))
 		return
@@ -86,8 +84,40 @@ func (server *Server) cancelReservation(ctx *gin.Context) {
 		return
 	}
 
+	penalty, err := server.Queries.GetTicketPenalties(ctx, reservation.ID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	departureTimeTicket := reservation.DepartureTime
+	now := time.Now()
+
+	if now.After(departureTimeTicket) {
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("the cancellation time has passed")))
+		return
+	}
+
+	timeRemaining := departureTimeTicket.Sub(now)
+
+	oneHour := time.Hour
+
+	var penaltyPercentage int32
+
+	if timeRemaining <= oneHour {
+		penaltyPercentage = penalty.AfterDay
+	} else {
+		penaltyPercentage = penalty.BeforDay
+	}
+
+	totalAmount := reservation.Amount * int64((100 - penaltyPercentage)/100)
+
 	argWallet := db.AddToUserWalletParams{
-		Wallet: reservation.Amount,
+		Wallet: totalAmount,
 		UserID: authPayload.UserID,
 	}
 
@@ -130,9 +160,9 @@ func (server *Server) cancelReservation(ctx *gin.Context) {
 	}
 
 	response := cancelReservationResponse{
-		Message:        "CANCELED",
-		AmountRefunded: reservation.Amount,
-		TicketID:       req.TicketID,
+		Message:           "CANCELED",
+		AmountRefunded:    reservation.Amount,
+		TicketID:          req.TicketID,
 		ChangeReservation: cngr,
 	}
 

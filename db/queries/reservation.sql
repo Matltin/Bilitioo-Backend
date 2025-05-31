@@ -43,6 +43,7 @@ SELECT
     r.payment_id,
     t.amount, 
     r.user_id,
+    t.departure_time,
     t.status
 FROM "ticket" t
 INNER JOIN "reservation" r ON r.ticket_id = t.id 

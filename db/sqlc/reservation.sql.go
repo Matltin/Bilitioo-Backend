@@ -104,6 +104,7 @@ SELECT
     r.payment_id,
     t.amount, 
     r.user_id,
+    t.departure_time,
     t.status
 FROM "ticket" t
 INNER JOIN "reservation" r ON r.ticket_id = t.id 
@@ -111,11 +112,12 @@ WHERE t.id = $1
 `
 
 type GetReservationDetailsRow struct {
-	ID        int64                        `json:"id"`
-	PaymentID int64                        `json:"payment_id"`
-	Amount    int64                        `json:"amount"`
-	UserID    int64                        `json:"user_id"`
-	Status    CheckReservationTicketStatus `json:"status"`
+	ID            int64                        `json:"id"`
+	PaymentID     int64                        `json:"payment_id"`
+	Amount        int64                        `json:"amount"`
+	UserID        int64                        `json:"user_id"`
+	DepartureTime time.Time                    `json:"departure_time"`
+	Status        CheckReservationTicketStatus `json:"status"`
 }
 
 func (q *Queries) GetReservationDetails(ctx context.Context, id int64) (GetReservationDetailsRow, error) {
@@ -126,6 +128,7 @@ func (q *Queries) GetReservationDetails(ctx context.Context, id int64) (GetReser
 		&i.PaymentID,
 		&i.Amount,
 		&i.UserID,
+		&i.DepartureTime,
 		&i.Status,
 	)
 	return i, err
