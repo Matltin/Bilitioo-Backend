@@ -53,3 +53,28 @@ WHERE t.id = $1;
 UPDATE "ticket"
 SET status = 'NOT_RESERVED'
 WHERE id = $1 AND status = 'RESERVED';
+
+
+-- name: GetCompletedUserReservation :many
+SELECT 
+    t.id,
+    oc.province,
+    dc.province
+FROM "reservation" re 
+INNER JOIN "ticket" t ON re.ticket_id = t.id
+INNER JOIN "route" ro ON t.route_id = ro.id
+INNER JOIN "city" oc ON oc.id = ro.origin_city_id
+INNER JOIN "city" dc ON dc.id = ro.destination_city_id
+WHERE re.status = 'RESERVED' AND re.user_id = $1;
+
+-- name: GetAllUserReservation :many
+SELECT 
+    t.id,
+    oc.province,
+    dc.province
+FROM "reservation" re 
+INNER JOIN "ticket" t ON re.ticket_id = t.id
+INNER JOIN "route" ro ON t.route_id = ro.id
+INNER JOIN "city" oc ON oc.id = ro.origin_city_id
+INNER JOIN "city" dc ON dc.id = ro.destination_city_id
+WHERE re.status != 'RESERVED' AND re.user_id = $1;

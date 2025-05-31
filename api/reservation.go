@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"errors"
 	"net/http"
 
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"
@@ -23,6 +24,11 @@ func (server *Server) createReservation(ctx *gin.Context) {
 	var req createReservationRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	if len(req.Tickets) == 0 {
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("there is no reservations")))
 		return
 	}
 
@@ -90,6 +96,20 @@ func (server *Server) createReservation(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, gin.H{
 		"reservations": reservations,
-		"payment": payment,
+		"payment":      payment,
 	})
+}
+
+func (server *Server) getAllUserReservation(ctx *gin.Context) {
+	authPayload := ctx.MustGet(authorizationPyloadKey).(*token.Payload)
+	reservations, err := server.Queries.GetAllUserReservation(ctx, authPayload.UserID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, reservations)
 }

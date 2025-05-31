@@ -69,6 +69,90 @@ func (q *Queries) CreateReservation(ctx context.Context, arg CreateReservationPa
 	return i, err
 }
 
+const getAllUserReservation = `-- name: GetAllUserReservation :many
+SELECT 
+    t.id,
+    oc.province,
+    dc.province
+FROM "reservation" re 
+INNER JOIN "ticket" t ON re.ticket_id = t.id
+INNER JOIN "route" ro ON t.route_id = ro.id
+INNER JOIN "city" oc ON oc.id = ro.origin_city_id
+INNER JOIN "city" dc ON dc.id = ro.destination_city_id
+WHERE re.status != 'RESERVED' AND re.user_id = $1
+`
+
+type GetAllUserReservationRow struct {
+	ID         int64  `json:"id"`
+	Province   string `json:"province"`
+	Province_2 string `json:"province_2"`
+}
+
+func (q *Queries) GetAllUserReservation(ctx context.Context, userID int64) ([]GetAllUserReservationRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAllUserReservation, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetAllUserReservationRow{}
+	for rows.Next() {
+		var i GetAllUserReservationRow
+		if err := rows.Scan(&i.ID, &i.Province, &i.Province_2); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getCompletedUserReservation = `-- name: GetCompletedUserReservation :many
+SELECT 
+    t.id,
+    oc.province,
+    dc.province
+FROM "reservation" re 
+INNER JOIN "ticket" t ON re.ticket_id = t.id
+INNER JOIN "route" ro ON t.route_id = ro.id
+INNER JOIN "city" oc ON oc.id = ro.origin_city_id
+INNER JOIN "city" dc ON dc.id = ro.destination_city_id
+WHERE re.status = 'RESERVED' AND re.user_id = $1
+`
+
+type GetCompletedUserReservationRow struct {
+	ID         int64  `json:"id"`
+	Province   string `json:"province"`
+	Province_2 string `json:"province_2"`
+}
+
+func (q *Queries) GetCompletedUserReservation(ctx context.Context, userID int64) ([]GetCompletedUserReservationRow, error) {
+	rows, err := q.db.QueryContext(ctx, getCompletedUserReservation, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetCompletedUserReservationRow{}
+	for rows.Next() {
+		var i GetCompletedUserReservationRow
+		if err := rows.Scan(&i.ID, &i.Province, &i.Province_2); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getIDReservation = `-- name: GetIDReservation :many
 SELECT r.id FROM "reservation" r
 INNER JOIN "payment" p ON p.id = r.payment_id
