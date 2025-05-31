@@ -58,26 +58,6 @@ INSERT INTO "penalty" ("vehicle_id", "penalty_text", "befor_day", "after_day") V
 -- Kish Air planes (vehicle 26)
 (26, 'Premium economy cancellation penalty: 38% before departure, 82% after departure', 38, 82);
 
--- Insert additional penalty rules for different time periods
--- Early cancellation penalties (more than 7 days before departure)
-INSERT INTO "penalty" ("vehicle_id", "penalty_text", "befor_day", "after_day") VALUES
--- Sample early cancellation penalties for some vehicles
-(1, 'Early bus cancellation (7+ days): 5% penalty, standard rates apply after', 5, 25),
-(11, 'Early train cancellation (7+ days): 10% penalty, standard rates apply after', 10, 50),
-(18, 'Early flight cancellation (7+ days): 15% penalty, standard rates apply after', 15, 75),
-
--- Late booking penalties (less than 24 hours before departure)
-(3, 'Last-minute VIP bus booking: 20% surcharge before, 50% penalty after', 20, 50),
-(15, 'Last-minute premium train booking: 30% surcharge before, 70% penalty after', 30, 70),
-(22, 'Last-minute business flight booking: 50% surcharge before, 100% penalty after', 50, 100);
-
--- Insert seasonal penalty adjustments
-INSERT INTO "penalty" ("vehicle_id", "penalty_text", "befor_day", "after_day") VALUES
--- Holiday season penalties
-(2, 'Holiday season bus penalty: 15% before departure, 35% after departure', 15, 35),
-(12, 'Holiday season train penalty: 25% before departure, 60% after departure', 25, 60),
-(19, 'Holiday season flight penalty: 40% before departure, 85% after departure', 40, 85);
-
 -- Create index for better performance on penalty queries
 CREATE INDEX ON "penalty" ("vehicle_id");
 CREATE INDEX ON "penalty" ("vehicle_id", "befor_day", "after_day");
