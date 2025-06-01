@@ -14,7 +14,11 @@ type Config struct {
 	DBSource             string        `mapstructure:"DB_SOURCE"`
 	HTTPServerAddress    string        `mapstructure:"HTTP_SERVER_ADDRESS"`
 	TokenSymmetrickey    string        `mapstructure:"TOKEN_SYMMETRIC_KEY"`
+	RedisAddress         string        `mapstructure:"REDIS_ADDRESS"`
 	AccessTokenDuration  time.Duration `mapstructure:"ACCESS_TOKEN_DURATION"`
+	EmailSenderName      string        `mapstructure:"EMAIL_SENDER_NAME"`
+	EmailSenderAdderss   string        `mapstructure:"EMAIL_SENDER_ADDRESS"`
+	EmailSenderPassword  string        `mapstructure:"EMAIL_SENDER_PASSWORD"`
 }
 
 // LoadConfig reads configuration from file or envirement variables.
