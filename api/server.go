@@ -6,17 +6,19 @@ import (
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"
 	"github.com/Matltin/Bilitioo-Backend/token"
 	"github.com/Matltin/Bilitioo-Backend/util"
+	"github.com/Matltin/Bilitioo-Backend/worker"
 	"github.com/gin-gonic/gin"
 )
 
 type Server struct {
-	config     util.Config
-	router     *gin.Engine
-	Queries    *db.Queries
-	tokenMaker token.Maker
+	config       util.Config
+	router       *gin.Engine
+	Queries      *db.Queries
+	tokenMaker   token.Maker
+	distribution worker.TaskDistributor
 }
 
-func NewServer(config util.Config, db *db.Queries) *Server {
+func NewServer(config util.Config, distributor worker.TaskDistributor, db *db.Queries) *Server {
 	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetrickey)
 	if err != nil {
 		log.Fatal(err)
@@ -26,6 +28,7 @@ func NewServer(config util.Config, db *db.Queries) *Server {
 		config:     config,
 		Queries:    db,
 		tokenMaker: tokenMaker,
+		distribution: distributor,
 	}
 
 	ser.setupRouter()

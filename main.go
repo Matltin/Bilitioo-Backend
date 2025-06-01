@@ -33,7 +33,7 @@ func main() {
 	taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
 	go runTaskProcessor(config, redisOpt, Queries)
 
-	server := api.NewServer(config, Queries)
+	server := api.NewServer(config, taskDistributor, Queries)
 	server.Start(":8080")
 }
 
