@@ -41,17 +41,6 @@ func (server *Server) updateProfile(ctx *gin.Context) {
 		return
 	}
 
-	var newPass string = ""
-
-	if req.Password != "" {
-		var err error
-		newPass, err = util.HashedPassword(req.Password)
-		if err != nil {
-			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-			return
-		}
-	}
-
 	profileArgs := db.UpdateProfileParams{
 		UserID: authPayload.UserID,
 		PicDir: sql.NullString{
@@ -80,6 +69,17 @@ func (server *Server) updateProfile(ctx *gin.Context) {
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
+	}
+
+	var newPass string = ""
+
+	if req.Password != "" {
+		var err error
+		newPass, err = util.HashedPassword(req.Password)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
 	}
 
 	userArgs := db.UpdateUserContactParams{

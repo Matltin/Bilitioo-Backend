@@ -1,26 +1,48 @@
 package util
 
 import (
+	"crypto/rand"
+	"crypto/sha256"
+	"encoding/hex"
 	"errors"
+	"fmt"
+	"strings"
 )
 
-// HashedPassword return bcrypt hash of password
+// HashedPassword generates a SHA-256 hash of the password with a random salt
 func HashedPassword(password string) (string, error) {
-	// hashedPassword, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	// if err != nil {
-	// 	return "", fmt.Errorf("failed to hash password: %s", err)
-	// }
-	// return string(hashedPassword), nil
+	// Generate a random salt
+	salt := make([]byte, 16)
+	if _, err := rand.Read(salt); err != nil {
+		return "", fmt.Errorf("failed to generate salt: %w", err)
+	}
 
-	return password, nil
+	// Create SHA-256 hash of password + salt
+	hash := sha256.Sum256([]byte(password + string(salt)))
+
+	// Return format: salt:hash
+	return fmt.Sprintf("%x:%x", salt, hash), nil
 }
 
-// CheckPassword checks if the provoided password is correct or not
+// CheckPassword verifies if the provided password matches the hashed password
 func CheckPassword(password string, hashedPassword string) error {
-	// return bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	// Split salt and hash
+	parts := strings.Split(hashedPassword, ":")
+	if len(parts) != 2 {
+		return errors.New("invalid hash format")
+	}
 
-	if password != hashedPassword {
-		return errors.New("not equal password")
+	salt, err := hex.DecodeString(parts[0])
+	if err != nil {
+		return fmt.Errorf("failed to decode salt: %w", err)
+	}
+
+	// Compute hash of provided password with the same salt
+	hash := sha256.Sum256([]byte(password + string(salt)))
+
+	// Compare with stored hash
+	if hex.EncodeToString(hash[:]) != parts[1] {
+		return errors.New("passwords do not match")
 	}
 
 	return nil
