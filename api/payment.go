@@ -70,6 +70,11 @@ func (server *Server) payPayment(ctx *gin.Context) {
 			return
 		}
 
+		if status != db.TicketStatusRESERVING {
+			ctx.JSON(http.StatusBadRequest, errorResponse(fmt.Errorf("reservation is not in reserving status, %s", status)))
+			continue
+		}
+
 		arg := db.UpdateReservationParams{
 			Status: db.TicketStatus(req.ReservationStatus),
 			ID:     r,
