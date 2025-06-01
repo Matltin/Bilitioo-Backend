@@ -5,10 +5,13 @@ import (
 	"errors"
 	"net/http"
 	"regexp"
+	"time"
 
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"
 	"github.com/Matltin/Bilitioo-Backend/util"
+	"github.com/Matltin/Bilitioo-Backend/worker"
 	"github.com/gin-gonic/gin"
+	"github.com/hibiken/asynq"
 	"github.com/lib/pq"
 )
 
@@ -52,11 +55,6 @@ func (server *Server) signUpUser(ctx *gin.Context) {
 		return
 	}
 
-	var emailVerify bool = false
-	if req.Email != "" {
-		emailVerify = true
-	}
-
 	var phoneVerify bool = false
 	if req.PhoneNumber != "" {
 		phoneVerify = true
@@ -71,7 +69,7 @@ func (server *Server) signUpUser(ctx *gin.Context) {
 		HashedPassword: hashedPassword,
 		Email:          req.Email,
 		PhoneNumber:    req.PhoneNumber,
-		EmailVerified:  emailVerify,
+		EmailVerified:  false,
 		PhoneVerified:  phoneVerify,
 	}
 
@@ -87,10 +85,23 @@ func (server *Server) signUpUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+
 	err = server.Queries.InitialProfile(ctx, user.ID)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 	}
+
+	payload := worker.PayloadSendVerfyEmail{
+		Email: user.Email,
+	}
+
+	opts := []asynq.Option{
+		asynq.MaxRetry(10),
+		asynq.ProcessIn(10 * time.Second),
+		asynq.Queue(worker.QueueCritical),
+	}
+
+	server.distribution.DistributTaskSendVerifyEmail(ctx, &payload, opts...)
 	ctx.JSON(http.StatusOK, nil)
 }
 
