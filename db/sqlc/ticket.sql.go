@@ -386,10 +386,11 @@ func (q *Queries) SearchTickets(ctx context.Context, arg SearchTicketsParams) ([
 	return items, nil
 }
 
-const updateTicketStatus = `-- name: UpdateTicketStatus :exec
+const updateTicketStatus = `-- name: UpdateTicketStatus :one
 UPDATE "ticket"
 SET status = $1
 WHERE id = $2
+RETURNING amount
 `
 
 type UpdateTicketStatusParams struct {
@@ -397,7 +398,9 @@ type UpdateTicketStatusParams struct {
 	ID     int64                        `json:"id"`
 }
 
-func (q *Queries) UpdateTicketStatus(ctx context.Context, arg UpdateTicketStatusParams) error {
-	_, err := q.db.ExecContext(ctx, updateTicketStatus, arg.Status, arg.ID)
-	return err
+func (q *Queries) UpdateTicketStatus(ctx context.Context, arg UpdateTicketStatusParams) (int64, error) {
+	row := q.db.QueryRowContext(ctx, updateTicketStatus, arg.Status, arg.ID)
+	var amount int64
+	err := row.Scan(&amount)
+	return amount, err
 }

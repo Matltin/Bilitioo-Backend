@@ -114,8 +114,9 @@ WHERE p.status != 'COMPLETED' AND re.user_id = $1;
 SELECT * FROM "ticket"
 WHERE status != 'RESERVED';
 
--- name: UpdateTicketStatus :exec
+-- name: UpdateTicketStatus :one
 UPDATE "ticket"
 SET status = $1
-WHERE id = $2;
+WHERE id = $2
+RETURNING amount;
 

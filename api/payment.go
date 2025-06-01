@@ -63,6 +63,8 @@ func (server *Server) payPayment(ctx *gin.Context) {
 		return
 	}
 
+	var amount int64 = 0
+
 	for _, r := range reservationsID {
 		status, err := server.Queries.GetReservationStatus(ctx, r)
 		if err != nil {
@@ -92,7 +94,7 @@ func (server *Server) payPayment(ctx *gin.Context) {
 			Status: db.CheckReservationTicketStatus(req.ReservationStatus),
 		}
 
-		err = server.Queries.UpdateTicketStatus(ctx, argTicket)
+		ticketAmount, err := server.Queries.UpdateTicketStatus(ctx, argTicket)
 		if err != nil {
 			if err == sql.ErrNoRows {
 				ctx.JSON(http.StatusNotFound, errorResponse(errors.New("reserved not found")))
@@ -101,6 +103,8 @@ func (server *Server) payPayment(ctx *gin.Context) {
 			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 			return
 		}
+
+		amount += ticketAmount
 
 		argChangeReservation := db.CreateChangeReservationParams{
 			ReservationID: reservation.ID,
@@ -111,6 +115,19 @@ func (server *Server) payPayment(ctx *gin.Context) {
 		}
 
 		_, err = server.Queries.CreateChangeReservation(ctx, argChangeReservation)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+	}
+
+	if req.Type == "WALLET" {
+		argWallet := db.AddToUserWalletParams{
+			Wallet: amount,
+			UserID: authPayload.UserID,
+		}
+
+		err = server.Queries.AddToUserWallet(ctx, argWallet)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 			return
