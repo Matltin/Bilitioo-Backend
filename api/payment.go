@@ -104,6 +104,18 @@ func (server *Server) payPayment(ctx *gin.Context) {
 			return
 		}
 
+		// Invalidate ticket details cache
+		ticketCacheKey := fmt.Sprintf("ticket_details:%d", reservation.ID)
+		_ = server.redisClient.Delete(ctx, ticketCacheKey)
+
+		// Invalidate all search ticket cache keys
+		searchKeys, err := server.redisClient.Client.Keys(ctx, "search:*").Result()
+		if err == nil {
+			for _, key := range searchKeys {
+				_ = server.redisClient.Delete(ctx, key)
+			}
+		}
+
 		amount += ticketAmount
 
 		argChangeReservation := db.CreateChangeReservationParams{
