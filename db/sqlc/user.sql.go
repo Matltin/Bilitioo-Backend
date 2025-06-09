@@ -85,6 +85,32 @@ func (q *Queries) GetUser(ctx context.Context, arg GetUserParams) (GetUserRow, e
 	return i, err
 }
 
+const getUserByID = `-- name: GetUserByID :one
+SELECT 
+    "id", "email", "phone_number", "hashed_password"
+FROM "user"
+WHERE "id" = $1
+`
+
+type GetUserByIDRow struct {
+	ID             int64  `json:"id"`
+	Email          string `json:"email"`
+	PhoneNumber    string `json:"phone_number"`
+	HashedPassword string `json:"hashed_password"`
+}
+
+func (q *Queries) GetUserByID(ctx context.Context, id int64) (GetUserByIDRow, error) {
+	row := q.db.QueryRowContext(ctx, getUserByID, id)
+	var i GetUserByIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.Email,
+		&i.PhoneNumber,
+		&i.HashedPassword,
+	)
+	return i, err
+}
+
 const initialProfile = `-- name: InitialProfile :exec
 INSERT INTO "profile" (
   "user_id"

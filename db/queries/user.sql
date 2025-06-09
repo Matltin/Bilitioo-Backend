@@ -22,6 +22,12 @@ INSERT INTO "profile" (
   $1
 );
 
+-- name: GetUserByID :one
+SELECT 
+    "id", "email", "phone_number", "hashed_password"
+FROM "user"
+WHERE "id" = $1;
+
 -- name: UpdateUserContact :one
 UPDATE "user"
 SET
