@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -146,7 +147,6 @@ func (server *Server) searchTickets(ctx *gin.Context) {
 
 	ctx.JSON(http.StatusOK, tickets)
 }
-
 
 type getTicketDetailsRequest struct {
 	TicketID int64 `uri:"ticket_id" binding:"required"`

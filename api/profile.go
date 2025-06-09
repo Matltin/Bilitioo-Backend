@@ -290,7 +290,6 @@ func (server *Server) getUserProfile(ctx *gin.Context) {
 	if err == nil {
 		var profile db.Profile
 		if err := json.Unmarshal([]byte(cachedProfile), &profile); err == nil {
-			log.Println("mother fucker\n\n")
 			ctx.JSON(http.StatusOK, profile)
 			return
 		}
