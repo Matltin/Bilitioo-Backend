@@ -42,8 +42,8 @@ func NewServer(config util.Config, distributor worker.TaskDistributor, db *db.Qu
 func (ser *Server) setupRouter() {
 	router := gin.Default()
 
-	router.POST("/sign-in", ser.registerUser)
-	router.POST("/log-in", ser.logInUser)
+	router.POST("/sign-in", ser.registerUserRedis)
+	router.POST("/log-in", ser.loginUserRedis)
 
 	authRoutes := router.Group("/").Use(authMiddleware(ser.tokenMaker))
 

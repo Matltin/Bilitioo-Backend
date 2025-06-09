@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"regexp"
 	"time"
@@ -167,7 +168,7 @@ func (server *Server) logInUser(ctx *gin.Context) {
 }
 
 // api/auth.go
-func (server *Server) registerUser(ctx *gin.Context) {
+func (server *Server) registerUserRedis(ctx *gin.Context) {
 	var req signUpUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
@@ -262,4 +263,96 @@ func (server *Server) registerUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, nil)
 
 	// ... rest of your existing code ...
+}
+
+// api/auth.go
+func (server *Server) loginUserRedis(ctx *gin.Context) {
+	var req logInUserRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	if req.Email == "" && req.PhoneNumber == "" {
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("either email or phone_number must be provided")))
+		return
+	}
+
+	// Create a cache key
+	cacheKey := fmt.Sprintf("user:%s:%s", req.Email, req.PhoneNumber)
+
+	// Try to get from cache first
+	cachedUser, err := server.redisClient.Get(ctx, cacheKey)
+
+	if err == nil {
+		var user db.User
+		if err := json.Unmarshal([]byte(cachedUser), &user); err == nil {
+			// Verify password
+			if err := util.CheckPassword(req.Password, user.HashedPassword); err != nil {
+				ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+				return
+			}
+
+			accessToken, _, err := server.tokenMaker.CreateToken(user.ID, server.config.AccessTokenDuration)
+			if err != nil {
+				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+				return
+			}
+
+			res := logInUserResponse{
+				User:        db.GetUserRow{
+					ID: user.ID,
+					Email: user.Email,
+					PhoneNumber: user.PhoneNumber,
+					HashedPassword: user.HashedPassword,
+				},
+				AccessToken: accessToken,
+			}
+
+			ctx.JSON(http.StatusOK, res)
+			return
+		}
+	}
+
+	// Cache miss, proceed with database query
+	arg := db.GetUserParams{
+		Email:       req.Email,
+		PhoneNumber: req.PhoneNumber,
+	}
+
+	user, err := server.Queries.GetUser(ctx, arg)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	// Verify password
+	err = util.CheckPassword(req.Password, user.HashedPassword)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+		return
+	}
+
+	// Cache the user data
+	userJSON, err := json.Marshal(user)
+	if err == nil {
+		server.redisClient.Set(ctx, cacheKey, string(userJSON), 5*time.Minute)
+	}
+
+	accessToken, _, err := server.tokenMaker.CreateToken(user.ID, server.config.AccessTokenDuration)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res := logInUserResponse{
+		User:        user,
+		AccessToken: accessToken,
+	}
+
+	ctx.JSON(http.StatusOK, res)
 }
