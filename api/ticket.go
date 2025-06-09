@@ -2,7 +2,9 @@ package api
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -102,14 +104,25 @@ func (server *Server) searchTickets(ctx *gin.Context) {
 		return
 	}
 
-	// Parse departure date
+	cacheKey := fmt.Sprintf("search:%d:%d:%s:%s", req.OriginCityID, req.DestinationCityID, req.DepartureDate, req.VehicleType)
+
+	// Try Redis
+	cached, err := server.redisClient.Get(ctx, cacheKey)
+	if err == nil && cached != "" {
+		var tickets []db.Ticket
+		if err := json.Unmarshal([]byte(cached), &tickets); err == nil {
+			ctx.JSON(http.StatusOK, tickets)
+			return
+		}
+	}
+
+	// Parse and search DB
 	departureDate, err := time.Parse("2006-01-02", req.DepartureDate)
 	if err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid date format, expected YYYY-MM-DD")))
 		return
 	}
 
-	// Calculate date range
 	startOfDay := time.Date(departureDate.Year(), departureDate.Month(), departureDate.Day(), 0, 0, 0, 0, time.UTC)
 	endOfDay := startOfDay.Add(24 * time.Hour)
 
@@ -127,8 +140,13 @@ func (server *Server) searchTickets(ctx *gin.Context) {
 		return
 	}
 
+	// Save to Redis
+	jsonData, _ := json.Marshal(tickets)
+	server.redisClient.Set(ctx, cacheKey, jsonData, 5*time.Minute)
+
 	ctx.JSON(http.StatusOK, tickets)
 }
+
 
 type getTicketDetailsRequest struct {
 	TicketID int64 `uri:"ticket_id" binding:"required"`
@@ -141,6 +159,19 @@ func (server *Server) getTicketDetails(ctx *gin.Context) {
 		return
 	}
 
+	cacheKey := fmt.Sprintf("ticket_details:%d", req.TicketID)
+
+	// Check Redis
+	cached, err := server.redisClient.Get(ctx, cacheKey)
+	if err == nil && cached != "" {
+		var cachedResponse map[string]interface{}
+		if err := json.Unmarshal([]byte(cached), &cachedResponse); err == nil {
+			ctx.JSON(http.StatusOK, cachedResponse)
+			return
+		}
+	}
+
+	// DB Query fallback
 	ticket, err := server.Queries.GetTicketDetails(ctx, req.TicketID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -174,6 +205,10 @@ func (server *Server) getTicketDetails(ctx *gin.Context) {
 		response["flight_class"] = string(ticket.FlightClass.FlightClass)
 		response["airplane_name"] = ticket.AirplaneName.String
 	}
+
+	// Store in Redis
+	jsonData, _ := json.Marshal(response)
+	server.redisClient.Set(ctx, cacheKey, jsonData, 10*time.Minute)
 
 	ctx.JSON(http.StatusOK, response)
 }
