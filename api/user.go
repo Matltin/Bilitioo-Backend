@@ -2,7 +2,9 @@ package api
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 	"regexp"
 	"time"
@@ -32,6 +34,7 @@ type signUpUserRequest struct {
 	Password    string `json:"password" binding:"required,min=8"`
 }
 
+// before add redis
 func (server *Server) signUpUser(ctx *gin.Context) {
 	var req signUpUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -161,4 +164,102 @@ func (server *Server) logInUser(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, res)
+}
+
+// api/auth.go
+func (server *Server) registerUser(ctx *gin.Context) {
+	var req signUpUserRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	// Check if user exists in cache first (for rate limiting or duplicate checks)
+	cacheKey := fmt.Sprintf("signup:attempt:%s:%s", req.Email, req.PhoneNumber)
+	exists, err := server.redisClient.Exists(ctx, cacheKey)
+	if err == nil && exists {
+		ctx.JSON(http.StatusTooManyRequests, errorResponse(errors.New("please wait before trying again")))
+		return
+	}
+
+	// Set a temporary key to prevent rapid duplicate signups
+	server.redisClient.Set(ctx, cacheKey, "1", 1*time.Minute)
+
+	// Rest of your existing validation code...
+	if req.Email != "" && !isValidEmail(req.Email) {
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid email format")))
+		return
+	}
+
+	// ... rest of your existing signup logic ...
+
+	if req.PhoneNumber != "" && !isValidPhoneNumber(req.PhoneNumber) {
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid phone number format. It must start with 09 and be 11 digits long")))
+		return
+	}
+
+	hashedPassword, err := util.HashedPassword(req.Password)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	var phoneVerify bool = false
+	if req.PhoneNumber != "" {
+		phoneVerify = true
+	}
+
+	if req.Email == "" && req.PhoneNumber == "" {
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("either email or phone_number must be provided")))
+		return
+	}
+
+	arg := db.CreateUserParams{
+		HashedPassword: hashedPassword,
+		Email:          req.Email,
+		PhoneNumber:    req.PhoneNumber,
+		EmailVerified:  false,
+		PhoneVerified:  phoneVerify,
+	}
+
+	user, err := server.Queries.CreateUser(ctx, arg)
+	if err != nil {
+		if pqErr, ok := err.(*pq.Error); ok {
+			switch pqErr.Code.Name() {
+			case "unique_violation":
+				ctx.JSON(http.StatusForbidden, errorResponse(err))
+				return
+			}
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	err = server.Queries.InitialProfile(ctx, user.ID)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+	}
+
+	// payload := worker.PayloadSendVerfyEmail{
+	// 	Email: user.Email,
+	// }
+
+	// opts := []asynq.Option{
+	// 	asynq.MaxRetry(10),
+	// 	asynq.ProcessIn(10 * time.Second),
+	// 	asynq.Queue(worker.QueueCritical),
+	// }
+
+	// server.distribution.DistributTaskSendVerifyEmail(ctx, &payload, opts...)
+
+	// After successful signup, you might want to cache the new user
+	userCacheKey := fmt.Sprintf("user:%s:%s", user.Email, user.PhoneNumber)
+	userJSON, err := json.Marshal(user)
+	if err == nil {
+		server.redisClient.Set(ctx, userCacheKey, string(userJSON), 5*time.Minute)
+	}
+
+	ctx.JSON(http.StatusOK, nil)
+
+	// ... rest of your existing code ...
 }

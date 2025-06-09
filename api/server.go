@@ -4,6 +4,7 @@ import (
 	"log"
 
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"
+	db_redis "github.com/Matltin/Bilitioo-Backend/redis"
 	"github.com/Matltin/Bilitioo-Backend/token"
 	"github.com/Matltin/Bilitioo-Backend/util"
 	"github.com/Matltin/Bilitioo-Backend/worker"
@@ -16,19 +17,21 @@ type Server struct {
 	Queries      *db.Queries
 	tokenMaker   token.Maker
 	distribution worker.TaskDistributor
+	redisClient  *db_redis.Client
 }
 
-func NewServer(config util.Config, distributor worker.TaskDistributor, db *db.Queries) *Server {
+func NewServer(config util.Config, distributor worker.TaskDistributor, db *db.Queries, redis *db_redis.Client) *Server {
 	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetrickey)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	ser := &Server{
-		config:     config,
-		Queries:    db,
-		tokenMaker: tokenMaker,
+		config:       config,
+		Queries:      db,
+		tokenMaker:   tokenMaker,
 		distribution: distributor,
+		redisClient:  redis,
 	}
 
 	ser.setupRouter()
@@ -39,7 +42,7 @@ func NewServer(config util.Config, distributor worker.TaskDistributor, db *db.Qu
 func (ser *Server) setupRouter() {
 	router := gin.Default()
 
-	router.POST("/sign-in", ser.signUpUser)
+	router.POST("/sign-in", ser.registerUser)
 	router.POST("/log-in", ser.logInUser)
 
 	authRoutes := router.Group("/").Use(authMiddleware(ser.tokenMaker))

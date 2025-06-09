@@ -57,7 +57,8 @@ WHERE id = $1 AND status = 'RESERVED';
 
 -- name: GetCompletedUserReservation :many
 SELECT 
-    t.id,
+    re.id AS "reservation_id",
+    t.id AS "ticket_id",
     oc.province,
     dc.province
 FROM "reservation" re 
@@ -69,6 +70,7 @@ WHERE re.status = 'RESERVED' AND re.user_id = $1;
 
 -- name: GetAllUserReservation :many
 SELECT 
+    re.id,
     t.id,
     oc.province,
     dc.province

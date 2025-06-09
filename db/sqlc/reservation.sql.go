@@ -71,6 +71,7 @@ func (q *Queries) CreateReservation(ctx context.Context, arg CreateReservationPa
 
 const getAllUserReservation = `-- name: GetAllUserReservation :many
 SELECT 
+    re.id,
     t.id,
     oc.province,
     dc.province
@@ -84,6 +85,7 @@ WHERE re.status != 'RESERVED' AND re.user_id = $1
 
 type GetAllUserReservationRow struct {
 	ID         int64  `json:"id"`
+	ID_2       int64  `json:"id_2"`
 	Province   string `json:"province"`
 	Province_2 string `json:"province_2"`
 }
@@ -97,7 +99,12 @@ func (q *Queries) GetAllUserReservation(ctx context.Context, userID int64) ([]Ge
 	items := []GetAllUserReservationRow{}
 	for rows.Next() {
 		var i GetAllUserReservationRow
-		if err := rows.Scan(&i.ID, &i.Province, &i.Province_2); err != nil {
+		if err := rows.Scan(
+			&i.ID,
+			&i.ID_2,
+			&i.Province,
+			&i.Province_2,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)
@@ -113,7 +120,8 @@ func (q *Queries) GetAllUserReservation(ctx context.Context, userID int64) ([]Ge
 
 const getCompletedUserReservation = `-- name: GetCompletedUserReservation :many
 SELECT 
-    t.id,
+    re.id AS "reservation_id",
+    t.id AS "ticket_id",
     oc.province,
     dc.province
 FROM "reservation" re 
@@ -125,9 +133,10 @@ WHERE re.status = 'RESERVED' AND re.user_id = $1
 `
 
 type GetCompletedUserReservationRow struct {
-	ID         int64  `json:"id"`
-	Province   string `json:"province"`
-	Province_2 string `json:"province_2"`
+	ReservationID int64  `json:"reservation_id"`
+	TicketID      int64  `json:"ticket_id"`
+	Province      string `json:"province"`
+	Province_2    string `json:"province_2"`
 }
 
 func (q *Queries) GetCompletedUserReservation(ctx context.Context, userID int64) ([]GetCompletedUserReservationRow, error) {
@@ -139,7 +148,12 @@ func (q *Queries) GetCompletedUserReservation(ctx context.Context, userID int64)
 	items := []GetCompletedUserReservationRow{}
 	for rows.Next() {
 		var i GetCompletedUserReservationRow
-		if err := rows.Scan(&i.ID, &i.Province, &i.Province_2); err != nil {
+		if err := rows.Scan(
+			&i.ReservationID,
+			&i.TicketID,
+			&i.Province,
+			&i.Province_2,
+		); err != nil {
 			return nil, err
 		}
 		items = append(items, i)

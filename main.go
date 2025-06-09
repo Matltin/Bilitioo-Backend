@@ -8,6 +8,7 @@ import (
 	"github.com/Matltin/Bilitioo-Backend/api"
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"
 	"github.com/Matltin/Bilitioo-Backend/mail"
+	"github.com/Matltin/Bilitioo-Backend/redis"
 	"github.com/Matltin/Bilitioo-Backend/util"
 	"github.com/Matltin/Bilitioo-Backend/worker"
 	"github.com/hibiken/asynq"
@@ -33,7 +34,9 @@ func main() {
 	taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
 	go runTaskProcessor(config, redisOpt, Queries)
 
-	server := api.NewServer(config, taskDistributor, Queries)
+	redis := db_redis.NewRedisClient(config.RedisAddress)
+
+	server := api.NewServer(config, taskDistributor, Queries, redis)
 	server.Start(":8080")
 }
 
