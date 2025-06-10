@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"
@@ -65,6 +66,8 @@ func (server *Server) payPayment(ctx *gin.Context) {
 
 	var amount int64 = 0
 
+	log.Println(reservationsID)
+
 	for _, r := range reservationsID {
 		status, err := server.Queries.GetReservationStatus(ctx, r)
 		if err != nil {
@@ -90,7 +93,7 @@ func (server *Server) payPayment(ctx *gin.Context) {
 		reservations = append(reservations, reservation)
 
 		argTicket := db.UpdateTicketStatusParams{
-			ID:     reservation.ID,
+			ID:     reservation.TicketID,
 			Status: db.CheckReservationTicketStatus(req.ReservationStatus),
 		}
 

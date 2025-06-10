@@ -36,8 +36,8 @@ func (server *Server) createReservation(ctx *gin.Context) {
 	var amount int64 = 0
 	for _, i := range req.Tickets {
 		t, err := server.Queries.GetTicket(ctx, i)
-		if t.Status == db.CheckReservationTicketStatusNOTRESERVED {
-			ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("ticket is not reserved")))
+		if t.Status != db.CheckReservationTicketStatusNOTRESERVED {
+			ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("ticket is reserved")))
 			continue
 		}
 		if err != nil {
