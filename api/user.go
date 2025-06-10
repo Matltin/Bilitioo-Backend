@@ -183,7 +183,7 @@ func (server *Server) registerUserRedis(ctx *gin.Context) {
 	}
 
 	// Set a temporary key to prevent rapid duplicate signups
-	server.redisClient.Set(ctx, cacheKey, "1", 1*time.Minute)
+	server.redisClient.Set(ctx, cacheKey, "1", 20*time.Second)
 
 	// Rest of your existing validation code...
 	if req.Email != "" && !isValidEmail(req.Email) {
@@ -240,17 +240,17 @@ func (server *Server) registerUserRedis(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 	}
 
-	// payload := worker.PayloadSendVerfyEmail{
-	// 	Email: user.Email,
-	// }
+	payload := worker.PayloadSendVerfyEmail{
+		Email: user.Email,
+	}
 
-	// opts := []asynq.Option{
-	// 	asynq.MaxRetry(10),
-	// 	asynq.ProcessIn(10 * time.Second),
-	// 	asynq.Queue(worker.QueueCritical),
-	// }
+	opts := []asynq.Option{
+		asynq.MaxRetry(10),
+		asynq.ProcessIn(10 * time.Second),
+		asynq.Queue(worker.QueueCritical),
+	}
 
-	// server.distribution.DistributTaskSendVerifyEmail(ctx, &payload, opts...)
+	server.distribution.DistributTaskSendVerifyEmail(ctx, &payload, opts...)
 
 	// After successful signup, you might want to cache the new user
 	userCacheKey := fmt.Sprintf("user:%s:%s", user.Email, user.PhoneNumber)
@@ -299,10 +299,10 @@ func (server *Server) loginUserRedis(ctx *gin.Context) {
 			}
 
 			res := logInUserResponse{
-				User:        db.GetUserRow{
-					ID: user.ID,
-					Email: user.Email,
-					PhoneNumber: user.PhoneNumber,
+				User: db.GetUserRow{
+					ID:             user.ID,
+					Email:          user.Email,
+					PhoneNumber:    user.PhoneNumber,
 					HashedPassword: user.HashedPassword,
 				},
 				AccessToken: accessToken,
