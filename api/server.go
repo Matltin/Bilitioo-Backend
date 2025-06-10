@@ -44,6 +44,7 @@ func (ser *Server) setupRouter() {
 
 	router.POST("/sign-in", ser.registerUserRedis)
 	router.POST("/log-in", ser.loginUserRedis)
+	router.GET("/verify-email", ser.verifyEmail)
 
 	authRoutes := router.Group("/").Use(authMiddleware(ser.tokenMaker))
 
