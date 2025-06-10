@@ -12,7 +12,9 @@ import (
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"
 	"github.com/Matltin/Bilitioo-Backend/token"
 	"github.com/Matltin/Bilitioo-Backend/util"
+	"github.com/Matltin/Bilitioo-Backend/worker"
 	"github.com/gin-gonic/gin"
+	"github.com/hibiken/asynq"
 )
 
 type updateProfileRequest struct {
@@ -112,6 +114,20 @@ func (server *Server) updateProfile(ctx *gin.Context) {
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
+	}
+
+	if req.Email != "" {
+		payload := worker.PayloadSendVerfyEmail{
+			Email: user.Email,
+		}
+
+		opts := []asynq.Option{
+			asynq.MaxRetry(10),
+			asynq.ProcessIn(10 * time.Second),
+			asynq.Queue(worker.QueueCritical),
+		}
+
+		server.distribution.DistributTaskSendVerifyEmail(ctx, &payload, opts...)
 	}
 
 	// Invalidate Redis cache for this user
