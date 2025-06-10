@@ -2,7 +2,7 @@ package worker
 
 import (
 	"context"
-	"fmt"
+	"log"
 
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"
 	"github.com/Matltin/Bilitioo-Backend/mail"
@@ -20,9 +20,9 @@ type TaskProcessor interface {
 }
 
 type RedisTaskProcessor struct {
-	server *asynq.Server
+	server  *asynq.Server
 	Queries *db.Queries
-	mailer mail.EmailSender
+	mailer  mail.EmailSender
 }
 
 func NewRedisTaskProcessor(redisOpt asynq.RedisClientOpt, Queries *db.Queries, mailer mail.EmailSender) TaskProcessor {
@@ -34,15 +34,15 @@ func NewRedisTaskProcessor(redisOpt asynq.RedisClientOpt, Queries *db.Queries, m
 				QueueDefault:  5,
 			},
 			ErrorHandler: asynq.ErrorHandlerFunc(func(ctx context.Context, task *asynq.Task, err error) {
-				fmt.Println()
+				log.Printf("Error processing task %s: %v", task.Type(), err)
 			}),
 		},
 	)
 
 	return &RedisTaskProcessor{
-		server: server,
-		Queries:  Queries,
-		mailer: mailer,
+		server:  server,
+		Queries: Queries,
+		mailer:  mailer,
 	}
 }
 

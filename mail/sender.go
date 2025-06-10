@@ -39,7 +39,7 @@ func NewGmailSender(name string, fromEmailAdderss string, fromEmailPassword stri
 
 func (sender *GmailSender) SendEmail(subject, content string, to, cc, bcc, attachFiles []string) error {
 	e := email.NewEmail()
-	e.From = fmt.Sprint("%s <%s>", sender.name, sender.fromEmailAdderss)
+	e.From = fmt.Sprintf("%s <%s>", sender.name, sender.fromEmailAdderss)
 	e.Subject = subject
 	e.HTML = []byte(content)
 	e.To = to
