@@ -163,3 +163,19 @@ func (q *Queries) UpdateUserContact(ctx context.Context, arg UpdateUserContactPa
 	)
 	return i, err
 }
+
+const updateUserEmailVerified = `-- name: UpdateUserEmailVerified :exec
+UPDATE "user"
+SET email_verified = $2
+WHERE id = $1
+`
+
+type UpdateUserEmailVerifiedParams struct {
+	ID            int64 `json:"id"`
+	EmailVerified bool  `json:"email_verified"`
+}
+
+func (q *Queries) UpdateUserEmailVerified(ctx context.Context, arg UpdateUserEmailVerifiedParams) error {
+	_, err := q.db.ExecContext(ctx, updateUserEmailVerified, arg.ID, arg.EmailVerified)
+	return err
+}

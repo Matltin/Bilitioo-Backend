@@ -36,3 +36,8 @@ SET
   hashed_password = COALESCE(sqlc.narg(hashed_password), hashed_password)
 WHERE id = $1
 RETURNING *;
+
+-- name: UpdateUserEmailVerified :exec
+UPDATE "user"
+SET email_verified = $2
+WHERE id = $1;
