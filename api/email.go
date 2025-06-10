@@ -52,5 +52,15 @@ func (server *Server) verifyEmail(ctx *gin.Context) {
 		return
 	}
 
+	
+
+	user, err := server.Queries.GetUserByID(ctx, verifyEmail.UserID)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	server.invalidateUserCache(ctx, user.ID, user.Email, user.PhoneNumber)
+
 	ctx.JSON(http.StatusOK, gin.H{"message": "email successfully verified"})
 }
