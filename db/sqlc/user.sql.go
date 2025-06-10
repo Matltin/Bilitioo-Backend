@@ -56,7 +56,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 
 const getUser = `-- name: GetUser :one
 SELECT 
-    "id", "email", "phone_number", "hashed_password"
+    "id", "email", "phone_number", "hashed_password", "email_verified"
 FROM "user"
 WHERE "email" = $1 OR "phone_number" = $2
 `
@@ -71,6 +71,7 @@ type GetUserRow struct {
 	Email          string `json:"email"`
 	PhoneNumber    string `json:"phone_number"`
 	HashedPassword string `json:"hashed_password"`
+	EmailVerified  bool   `json:"email_verified"`
 }
 
 func (q *Queries) GetUser(ctx context.Context, arg GetUserParams) (GetUserRow, error) {
@@ -81,6 +82,7 @@ func (q *Queries) GetUser(ctx context.Context, arg GetUserParams) (GetUserRow, e
 		&i.Email,
 		&i.PhoneNumber,
 		&i.HashedPassword,
+		&i.EmailVerified,
 	)
 	return i, err
 }

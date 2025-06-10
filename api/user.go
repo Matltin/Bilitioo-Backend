@@ -146,6 +146,12 @@ func (server *Server) logInUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
+
+	if user.EmailVerified == false {
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("verify your email first")))
+		return
+	}
+
 	err = util.CheckPassword(req.Password, user.HashedPassword)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))

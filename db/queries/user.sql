@@ -11,7 +11,7 @@ INSERT INTO "user" (
 
 -- name: GetUser :one
 SELECT 
-    "id", "email", "phone_number", "hashed_password"
+    "id", "email", "phone_number", "hashed_password", "email_verified"
 FROM "user"
 WHERE "email" = $1 OR "phone_number" = $2;
 
