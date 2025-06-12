@@ -656,13 +656,7 @@ Returns HTTP 200 OK with no body on success.
 - Updates reservation status in DB.
 - Creates a new `change_reservation` entry to log the transition.
 
-# Bilitioo Backend – API Endpoints
-
-This document explains the functionality of selected API endpoints from the `api` package in the Bilitioo backend. Each method is described with its purpose, request parameters, and response structure.
-
----
-
-## 1. `GET /tickets/:ticket_id/penalties`
+## `GET /tickets/:ticket_id/penalties`
 
 ### **Method:** `getTicketPenalties`
 
@@ -693,7 +687,7 @@ Returns penalty information for the specified ticket (usually includes fields li
 
 ---
 
-## 2. `DELETE /reservations/:ticket_id`
+## `DELETE /reservations/:ticket_id`
 
 ### **Method:** `cancelReservation`
 
@@ -742,7 +736,7 @@ Must be authorized with a valid token (`UserID` from token payload is used to ve
 
 ---
 
-## 3. `GET /verify_email?id={id}&secret_code={code}`
+## `GET /verify_email?id={id}&secret_code={code}`
 
 ### **Method:** `verifyEmail`
 
@@ -784,8 +778,6 @@ Verifies a user's email using a secret code received via email.
 
 ---
 
-
-# Bilitioo Backend API
 
 ## 📦 `POST /pay-payment`
 
