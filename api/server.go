@@ -51,8 +51,8 @@ func (ser *Server) setupRouter() {
 	authRoutes.PUT("/profile", ser.updateProfile) //3
 	authRoutes.GET("/profile", ser.getUserProfile)  //3
 	authRoutes.GET("/city", ser.getCities)  //4
+	authRoutes.POST("/city", ser.searchTicketsByCities) //4
 	authRoutes.GET("/search-tickets", ser.searchTickets) //5
-	authRoutes.POST("/city", ser.searchTicketsByCities)
 	authRoutes.GET("/ticket-detail/:ticket_id", ser.getTicketDetails)  //6
 	authRoutes.POST("/reservation", ser.createReservation)  //7
 	authRoutes.GET("/completedReservation", ser.getCompletedUserReservation)
