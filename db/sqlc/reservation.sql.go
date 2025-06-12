@@ -244,6 +244,18 @@ func (q *Queries) GetReservationStatus(ctx context.Context, id int64) (TicketSta
 	return status, err
 }
 
+const markExpiredReservations = `-- name: MarkExpiredReservations :exec
+UPDATE reservation
+SET status = 'CANCELED-BY-TIME'
+WHERE (created_at + duration_time) < now()
+  AND status != 'RESERVED'
+`
+
+func (q *Queries) MarkExpiredReservations(ctx context.Context) error {
+	_, err := q.db.ExecContext(ctx, markExpiredReservations)
+	return err
+}
+
 const updateReservation = `-- name: UpdateReservation :one
 UPDATE "reservation"
 SET 

@@ -51,5 +51,7 @@ func (processor RedisTaskProcessor) Start() error {
 
 	mux.HandleFunc(TaskSendVerifyEmail, processor.ProcessTaskSendVerifyEmail)
 
+	mux.HandleFunc(TaskCleanExpiredReservations, processor.ProcessTaskCleanExpiredReservations)
+
 	return processor.server.Start(mux)
 }

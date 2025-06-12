@@ -80,3 +80,9 @@ INNER JOIN "route" ro ON t.route_id = ro.id
 INNER JOIN "city" oc ON oc.id = ro.origin_city_id
 INNER JOIN "city" dc ON dc.id = ro.destination_city_id
 WHERE re.status != 'RESERVED' AND re.user_id = $1;
+
+-- name: MarkExpiredReservations :exec
+UPDATE reservation
+SET status = 'CANCELED-BY-TIME'
+WHERE (created_at + duration_time) < now()
+  AND status != 'RESERVED';

@@ -8,7 +8,7 @@ import (
 	"github.com/Matltin/Bilitioo-Backend/api"
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"
 	"github.com/Matltin/Bilitioo-Backend/mail"
-	"github.com/Matltin/Bilitioo-Backend/redis"
+	db_redis "github.com/Matltin/Bilitioo-Backend/redis"
 	"github.com/Matltin/Bilitioo-Backend/util"
 	"github.com/Matltin/Bilitioo-Backend/worker"
 	"github.com/hibiken/asynq"
@@ -33,6 +33,7 @@ func main() {
 	}
 	taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
 	go runTaskProcessor(config, redisOpt, Queries)
+	go runScheduler(redisOpt, taskDistributor)
 
 	redis := db_redis.NewRedisClient(config.RedisAddress)
 
@@ -46,5 +47,19 @@ func runTaskProcessor(config util.Config, redisOpt asynq.RedisClientOpt, store *
 	err := taskProcessor.Start()
 	if err != nil {
 		fmt.Println("failed to start task processor")
+	}
+}
+
+func runScheduler(redisOpt asynq.RedisClientOpt, distributor worker.TaskDistributor) {
+	scheduler := asynq.NewScheduler(redisOpt, nil)
+
+	_, err := scheduler.Register("* * * * *", worker.NewCleanExpiredReservationsTask())
+	if err != nil {
+		log.Fatalf("failed to register cron job: %v", err)
+	}
+
+	fmt.Println("✅ Scheduler started.")
+	if err := scheduler.Run(); err != nil {
+		log.Fatalf("failed to run scheduler: %v", err)
 	}
 }
