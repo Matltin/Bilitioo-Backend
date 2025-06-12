@@ -128,6 +128,16 @@ func (server *Server) updateProfile(ctx *gin.Context) {
 		}
 
 		server.distribution.DistributTaskSendVerifyEmail(ctx, &payload, opts...)
+
+		arg := db.UpdateUserEmailVerifiedParams{
+			ID:            profile.UserID,
+			EmailVerified: false,
+		}
+		err := server.Queries.UpdateUserEmailVerified(ctx, arg)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
 	}
 
 	// Invalidate Redis cache for this user
