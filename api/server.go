@@ -42,37 +42,36 @@ func NewServer(config util.Config, distributor worker.TaskDistributor, db *db.Qu
 func (ser *Server) setupRouter() {
 	router := gin.Default()
 
-	router.POST("/sign-in", ser.registerUserRedis)
-	router.POST("/log-in", ser.loginUserRedis)
+	router.POST("/sign-in", ser.registerUserRedis) //1
+	router.POST("/log-in", ser.loginUserRedis)  //2
 	router.GET("/verify-email", ser.verifyEmail)
 
 	authRoutes := router.Group("/").Use(authMiddleware(ser.tokenMaker))
 
-	authRoutes.PUT("/profile", ser.updateProfile)
-	authRoutes.GET("/profile", ser.getUserProfile)
-	authRoutes.GET("/city", ser.getCities)
+	authRoutes.PUT("/profile", ser.updateProfile) //3
+	authRoutes.GET("/profile", ser.getUserProfile)  //3
+	authRoutes.GET("/city", ser.getCities)  //4
+	authRoutes.GET("/search-tickets", ser.searchTickets) //5
 	authRoutes.POST("/city", ser.searchTicketsByCities)
-	authRoutes.GET("/ticket-detail/:ticket_id", ser.getTicketDetails)
-	authRoutes.POST("/reservation", ser.createReservation)
+	authRoutes.GET("/ticket-detail/:ticket_id", ser.getTicketDetails)  //6
+	authRoutes.POST("/reservation", ser.createReservation)  //7
 	authRoutes.GET("/completedReservation", ser.getCompletedUserReservation)
 	authRoutes.GET("/allReservation", ser.getAllUserReservation)
-	authRoutes.POST("/payment", ser.payPayment)
+	authRoutes.POST("/payment", ser.payPayment)  //8
 
-	authRoutes.GET("/search-tickets", ser.searchTickets)
 
-	authRoutes.GET("/ticket-penalties/:ticket_id", ser.getTicketPenalties)
+	authRoutes.GET("/ticket-penalties/:ticket_id", ser.getTicketPenalties)  //9
+	authRoutes.GET("/penalty/:ticket_id", ser.getTicketPenalties) //9
+	authRoutes.PUT("/penalty/:ticket_id", ser.cancelReservation)  //9, 12
 
-	authRoutes.GET("/penalty/:ticket_id", ser.getTicketPenalties)
-	authRoutes.PUT("/penalty/:ticket_id", ser.cancelReservation)
+	authRoutes.GET("/report", ser.getReports) //10
+	authRoutes.PUT("/report", ser.answerReport) //13
+	authRoutes.POST("/report", ser.createReport) //13
+	authRoutes.PUT("/manage-report", ser.updateTicketByReport)  //10
 
-	authRoutes.GET("/report", ser.getReports)
-	authRoutes.PUT("/report", ser.answerReport)
-	authRoutes.POST("/report", ser.createReport)
-	authRoutes.PUT("/manage-report", ser.updateTicketByReport)
-
-	authRoutes.GET("/completed-tickets", ser.getAllUserCompletedTickets)
-	authRoutes.GET("/notcompleted-tickets", ser.getAllUserNotCompletedTickets)
-	authRoutes.GET("/tickets", ser.getAllTickets)
+	authRoutes.GET("/completed-tickets", ser.getAllUserCompletedTickets) //11
+	authRoutes.GET("/notcompleted-tickets", ser.getAllUserNotCompletedTickets) //11
+	authRoutes.GET("/tickets", ser.getAllTickets) //11
 
 	ser.router = router
 }
