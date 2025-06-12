@@ -111,7 +111,9 @@ Contributions are welcome! Please fork the repo and submit a pull request.
 
 ## 📄 License
 
-MIT License © 2025 [Matin](https://github.com/Matltin)
+MIT License © 2025 [Matin](https://github.com/Matltin), [Reyhon](https://github.com/ryhn-mir) 🍀
+
+
 
 
 ## 🔌 How to Connect Components
