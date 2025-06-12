@@ -28,12 +28,6 @@ func isValidEmail(email string) bool {
 	return matched
 }
 
-type signUpUserRequest struct {
-	Email       string `json:"email"`
-	PhoneNumber string `json:"phone_number"`
-	Password    string `json:"password" binding:"required,min=8"`
-}
-
 // before add redis
 func (server *Server) signUpUser(ctx *gin.Context) {
 	var req signUpUserRequest
@@ -108,16 +102,7 @@ func (server *Server) signUpUser(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, nil)
 }
 
-type logInUserRequest struct {
-	Email       string `json:"email"`
-	PhoneNumber string `json:"phone_number"`
-	Password    string `json:"password"`
-}
 
-type logInUserResponse struct {
-	User        db.GetUserRow `json:"user"`
-	AccessToken string        `json:"access_token"`
-}
 
 func (server *Server) logInUser(ctx *gin.Context) {
 	var req logInUserRequest
@@ -165,6 +150,12 @@ func (server *Server) logInUser(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, res)
+}
+
+type signUpUserRequest struct {
+	Email       string `json:"email"`
+	PhoneNumber string `json:"phone_number"`
+	Password    string `json:"password" binding:"required,min=8"`
 }
 
 // api/auth.go
@@ -265,6 +256,17 @@ func (server *Server) registerUserRedis(ctx *gin.Context) {
 	// ... rest of your existing code ...
 }
 
+type logInUserRequest struct {
+	Email       string `json:"email"`
+	PhoneNumber string `json:"phone_number"`
+	Password    string `json:"password"`
+}
+
+type logInUserResponse struct {
+	User        db.GetUserRow `json:"user"`
+	AccessToken string        `json:"access_token"`
+}
+
 // api/auth.go
 func (server *Server) loginUserRedis(ctx *gin.Context) {
 	var req logInUserRequest
@@ -287,6 +289,8 @@ func (server *Server) loginUserRedis(ctx *gin.Context) {
 	if err == nil {
 		var user db.User
 		if err := json.Unmarshal([]byte(cachedUser), &user); err == nil {
+
+			fmt.Println(user.EmailVerified, user.PhoneVerified)
 
 			if user.EmailVerified == false && user.PhoneVerified == false {
 				ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("verify your email first")))

@@ -321,6 +321,8 @@ func (server *Server) getUserProfile(ctx *gin.Context) {
 		}
 	}
 
+	fmt.Println("hello")
+
 	// Cache miss - get from database
 	profile, err := server.Queries.GetUserProfile(ctx, authPayload.UserID)
 	if err != nil {

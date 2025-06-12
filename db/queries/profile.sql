@@ -24,7 +24,8 @@ SELECT
   p.first_name,
   p.last_name,
   p.city_id,
-  p.national_code
+  p.national_code, 
+  p.wallet
 FROM "user" u
 JOIN "profile" p ON u.id = p.user_id
 WHERE u.id = $1;

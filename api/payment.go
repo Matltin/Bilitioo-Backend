@@ -138,7 +138,7 @@ func (server *Server) payPayment(ctx *gin.Context) {
 
 	if req.Type == "WALLET" {
 		argWallet := db.AddToUserWalletParams{
-			Wallet: amount,
+			Wallet: -amount,
 			UserID: authPayload.UserID,
 		}
 
@@ -147,6 +147,19 @@ func (server *Server) payPayment(ctx *gin.Context) {
 			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 			return
 		}
+
+		user, err := server.Queries.GetUserByID(ctx, authPayload.UserID)
+		if err != nil {
+			if err == sql.ErrNoRows {
+				ctx.JSON(http.StatusNotFound, errorResponse(err))
+				return
+			}
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
+
+		server.invalidateUserCache(ctx, authPayload.UserID, user.Email, user.PhoneNumber)
+
 	}
 
 	var user_activity db.UpdateUserActivityRow

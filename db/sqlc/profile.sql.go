@@ -41,7 +41,8 @@ SELECT
   p.first_name,
   p.last_name,
   p.city_id,
-  p.national_code
+  p.national_code, 
+  p.wallet
 FROM "user" u
 JOIN "profile" p ON u.id = p.user_id
 WHERE u.id = $1
@@ -61,6 +62,7 @@ type GetUserProfileRow struct {
 	LastName      string     `json:"last_name"`
 	CityID        int64      `json:"city_id"`
 	NationalCode  string     `json:"national_code"`
+	Wallet        int64      `json:"wallet"`
 }
 
 func (q *Queries) GetUserProfile(ctx context.Context, id int64) (GetUserProfileRow, error) {
@@ -80,6 +82,7 @@ func (q *Queries) GetUserProfile(ctx context.Context, id int64) (GetUserProfileR
 		&i.LastName,
 		&i.CityID,
 		&i.NationalCode,
+		&i.Wallet,
 	)
 	return i, err
 }
