@@ -20,3 +20,10 @@ UPDATE "payment"
 SET 
     "amount" = "amount" - $1
 WHERE id = $2;
+
+-- name: UpdatePaymentStatus :one
+UPDATE "payment"
+SET 
+    "status" = $1
+WHERE id = $2
+RETURNING *;
