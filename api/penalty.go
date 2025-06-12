@@ -3,6 +3,7 @@ package api
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"net/http"
 	"time"
 
@@ -114,7 +115,7 @@ func (server *Server) cancelReservation(ctx *gin.Context) {
 		penaltyPercentage = penalty.BeforDay
 	}
 
-	totalAmount := reservation.Amount * int64((100 - penaltyPercentage)/100)
+	totalAmount := reservation.Amount * int64((100-penaltyPercentage)/100)
 
 	argWallet := db.AddToUserWalletParams{
 		Wallet: totalAmount,
@@ -157,6 +158,29 @@ func (server *Server) cancelReservation(ctx *gin.Context) {
 		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
+	}
+
+	argTicket := db.UpdateTicketStatusParams{
+		ID:     req.TicketID,
+		Status: db.CheckReservationTicketStatusNOTRESERVED,
+	}
+
+	_, err = server.Queries.UpdateTicketStatus(ctx, argTicket)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	// Invalidate ticket details cache
+	ticketCacheKey := fmt.Sprintf("ticket_details:%d", reservation.ID)
+	_ = server.redisClient.Delete(ctx, ticketCacheKey)
+
+	// Invalidate all search ticket cache keys
+	searchKeys, err := server.redisClient.Client.Keys(ctx, "search:*").Result()
+	if err == nil {
+		for _, key := range searchKeys {
+			_ = server.redisClient.Delete(ctx, key)
+		}
 	}
 
 	response := cancelReservationResponse{
