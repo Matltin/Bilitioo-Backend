@@ -1,5 +1,5 @@
 postgres:
-	docker run --name test_for_bilitioo_db -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres:12-alpine
+	docker run --name test_for_bilitioo_db --network bilitioo-network -p 5432:5432 -e POSTGRES_USER=root -e POSTGRES_PASSWORD=secret -d postgres:12-alpine
 
 psql:
 	docker exec -it test_for_bilitioo_db psql -U root -d bilitioo
@@ -49,5 +49,11 @@ test:
 restart:
 	migrate -path db/migrate -database "postgresql://root:secret@localhost:5432/bilitioo?sslmode=disable" -verbose down
 	migrate -path db/migrate -database  "postgresql://root:secret@localhost:5432/bilitioo?sslmode=disable" -verbose up
+
+build:
+	docker build -t bilitioo:latest . 
+
+bilitioo:
+	docker run --name bilitioo --network bilitioo-network -p 8080:8080 -e GIN_MODE=release -e DB_SOURCE="postgresql://root:secret@172.19.0.3:5432/bilitioo?sslmode=disable" bilitioo:latest
 
 .PHONY: sqlc test	
