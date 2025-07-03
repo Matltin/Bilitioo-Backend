@@ -28,129 +28,129 @@ func isValidEmail(email string) bool {
 	return matched
 }
 
-// before add redis
-func (server *Server) signUpUser(ctx *gin.Context) {
-	var req signUpUserRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
+// // before add redis
+// func (server *Server) signUpUser(ctx *gin.Context) {
+// 	var req signUpUserRequest
+// 	if err := ctx.ShouldBindJSON(&req); err != nil {
+// 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+// 		return
+// 	}
 
-	if req.Email != "" && !isValidEmail(req.Email) {
-		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid email format")))
-		return
-	}
+// 	if req.Email != "" && !isValidEmail(req.Email) {
+// 		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid email format")))
+// 		return
+// 	}
 
-	if req.PhoneNumber != "" && !isValidPhoneNumber(req.PhoneNumber) {
-		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid phone number format. It must start with 09 and be 11 digits long")))
-		return
-	}
+// 	if req.PhoneNumber != "" && !isValidPhoneNumber(req.PhoneNumber) {
+// 		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid phone number format. It must start with 09 and be 11 digits long")))
+// 		return
+// 	}
 
-	hashedPassword, err := util.HashedPassword(req.Password)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
+// 	hashedPassword, err := util.HashedPassword(req.Password)
+// 	if err != nil {
+// 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+// 		return
+// 	}
 
-	var phoneVerify bool = false
-	if req.PhoneNumber != "" {
-		phoneVerify = true
-	}
+// 	var phoneVerify bool = false
+// 	if req.PhoneNumber != "" {
+// 		phoneVerify = true
+// 	}
 
-	if req.Email == "" && req.PhoneNumber == "" {
-		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("either email or phone_number must be provided")))
-		return
-	}
+// 	if req.Email == "" && req.PhoneNumber == "" {
+// 		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("either email or phone_number must be provided")))
+// 		return
+// 	}
 
-	arg := db.CreateUserParams{
-		HashedPassword: hashedPassword,
-		Email:          req.Email,
-		PhoneNumber:    req.PhoneNumber,
-		EmailVerified:  false,
-		PhoneVerified:  phoneVerify,
-	}
+// 	arg := db.CreateUserParams{
+// 		HashedPassword: hashedPassword,
+// 		Email:          req.Email,
+// 		PhoneNumber:    req.PhoneNumber,
+// 		EmailVerified:  false,
+// 		PhoneVerified:  phoneVerify,
+// 	}
 
-	user, err := server.Queries.CreateUser(ctx, arg)
-	if err != nil {
-		if pqErr, ok := err.(*pq.Error); ok {
-			switch pqErr.Code.Name() {
-			case "unique_violation":
-				ctx.JSON(http.StatusForbidden, errorResponse(err))
-				return
-			}
-		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
+// 	user, err := server.Queries.CreateUser(ctx, arg)
+// 	if err != nil {
+// 		if pqErr, ok := err.(*pq.Error); ok {
+// 			switch pqErr.Code.Name() {
+// 			case "unique_violation":
+// 				ctx.JSON(http.StatusForbidden, errorResponse(err))
+// 				return
+// 			}
+// 		}
+// 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+// 		return
+// 	}
 
-	err = server.Queries.InitialProfile(ctx, user.ID)
-	if err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-	}
+// 	err = server.Queries.InitialProfile(ctx, user.ID)
+// 	if err != nil {
+// 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+// 	}
 
-	payload := worker.PayloadSendVerfyEmail{
-		Email: user.Email,
-	}
+// 	payload := worker.PayloadSendVerfyEmail{
+// 		Email: user.Email,
+// 	}
 
-	opts := []asynq.Option{
-		asynq.MaxRetry(10),
-		asynq.ProcessIn(10 * time.Second),
-		asynq.Queue(worker.QueueCritical),
-	}
+// 	opts := []asynq.Option{
+// 		asynq.MaxRetry(10),
+// 		asynq.ProcessIn(10 * time.Second),
+// 		asynq.Queue(worker.QueueCritical),
+// 	}
 
-	server.distribution.DistributTaskSendVerifyEmail(ctx, &payload, opts...)
-	ctx.JSON(http.StatusOK, nil)
-}
+// 	server.distribution.DistributTaskSendVerifyEmail(ctx, &payload, opts...)
+// 	ctx.JSON(http.StatusOK, nil)
+// }
 
 
 
-func (server *Server) logInUser(ctx *gin.Context) {
-	var req logInUserRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		ctx.JSON(http.StatusBadRequest, errorResponse(err))
-		return
-	}
+// func (server *Server) logInUser(ctx *gin.Context) {
+// 	var req logInUserRequest
+// 	if err := ctx.ShouldBindJSON(&req); err != nil {
+// 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+// 		return
+// 	}
 
-	if req.Email == "" && req.PhoneNumber == "" {
-		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("either email or phone_number must be provided")))
-		return
-	}
+// 	if req.Email == "" && req.PhoneNumber == "" {
+// 		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("either email or phone_number must be provided")))
+// 		return
+// 	}
 
-	arg := db.GetUserParams{
-		Email:       req.Email,
-		PhoneNumber: req.PhoneNumber,
-	}
+// 	arg := db.GetUserParams{
+// 		Email:       req.Email,
+// 		PhoneNumber: req.PhoneNumber,
+// 	}
 
-	user, err := server.Queries.GetUser(ctx, arg)
+// 	user, err := server.Queries.GetUser(ctx, arg)
 
-	if err != nil {
-		if err == sql.ErrNoRows {
-			ctx.JSON(http.StatusNotFound, errorResponse(err))
-			return
-		}
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
+// 	if err != nil {
+// 		if err == sql.ErrNoRows {
+// 			ctx.JSON(http.StatusNotFound, errorResponse(err))
+// 			return
+// 		}
+// 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+// 		return
+// 	}
 
-	err = util.CheckPassword(req.Password, user.HashedPassword)
-	if err != nil {
-		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
-		return
-	}
+// 	err = util.CheckPassword(req.Password, user.HashedPassword)
+// 	if err != nil {
+// 		ctx.JSON(http.StatusUnauthorized, errorResponse(err))
+// 		return
+// 	}
 
-	accessToken, _, err := server.tokenMaker.CreateToken(user.ID, server.config.AccessTokenDuration)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
-	}
+// 	accessToken, _, err := server.tokenMaker.CreateToken(user.ID, server.config.AccessTokenDuration)
+// 	if err != nil {
+// 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+// 		return
+// 	}
 
-	res := logInUserResponse{
-		User:        user,
-		AccessToken: accessToken,
-	}
+// 	res := logInUserResponse{
+// 		User:        user,
+// 		AccessToken: accessToken,
+// 	}
 
-	ctx.JSON(http.StatusOK, res)
-}
+// 	ctx.JSON(http.StatusOK, res)
+// }
 
 type signUpUserRequest struct {
 	Email       string `json:"email"`
