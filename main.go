@@ -16,11 +16,13 @@ import (
 )
 
 func main() {
+	// 1. config
 	config, err := util.LoadConfig(".")
 	if err != nil {
 		log.Fatal(err)
 	}
 
+	// 2. intialaize db
 	DB, err := sql.Open(config.DBDriver, config.DBSource)
 	if err != nil {
 		log.Fatal(err)
@@ -28,15 +30,19 @@ func main() {
 
 	Queries := db.New(DB)
 
+	// 3. intialaize redis
 	redisOpt := asynq.RedisClientOpt{
 		Addr: config.RedisAddress,
 	}
 	taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
+
+	// 4. set worker
 	go runTaskProcessor(config, redisOpt, Queries)
 	go runScheduler(redisOpt, taskDistributor)
 
 	redis := db_redis.NewRedisClient(config.RedisAddress)
 
+	// 5. setup server
 	server := api.NewServer(config, taskDistributor, Queries, redis)
 	server.Start(":8080")
 }
