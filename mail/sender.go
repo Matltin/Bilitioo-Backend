@@ -54,5 +54,6 @@ func (sender *GmailSender) SendEmail(subject, content string, to, cc, bcc, attac
 	}
 
 	smtpAuth := smtp.PlainAuth("", sender.fromEmailAdderss, sender.fromEmailPassword, smtpAuthAddress)
+	fmt.Println("Send")
 	return e.Send(smtpServerAddress, smtpAuth)
 }

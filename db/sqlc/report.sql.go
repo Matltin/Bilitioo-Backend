@@ -44,10 +44,11 @@ INSERT INTO "report" (
     "reservation_id",
     "user_id",
     "request_type",
-    "request_text"
+    "request_text",
+    "response_text"
 )
 VALUES (
-    $1, $2, $3, $4
+    $1, $2, $3, $4, $5
 ) RETURNING id, reservation_id, user_id, admin_id, request_type, request_text, response_text
 `
 
@@ -56,6 +57,7 @@ type CreateReportParams struct {
 	UserID        int64       `json:"user_id"`
 	RequestType   RequestType `json:"request_type"`
 	RequestText   string      `json:"request_text"`
+	ResponseText  string      `json:"response_text"`
 }
 
 func (q *Queries) CreateReport(ctx context.Context, arg CreateReportParams) (Report, error) {
@@ -64,6 +66,7 @@ func (q *Queries) CreateReport(ctx context.Context, arg CreateReportParams) (Rep
 		arg.UserID,
 		arg.RequestType,
 		arg.RequestText,
+		arg.ResponseText,
 	)
 	var i Report
 	err := row.Scan(

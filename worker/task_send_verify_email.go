@@ -80,6 +80,6 @@ func (processor *RedisTaskProcessor) ProcessTaskSendVerifyEmail(ctx context.Cont
 		return fmt.Errorf("failed to send verify email: %w", err)
 	}
 
-	fmt.Println(user)
+	fmt.Println(verifyUrl)
 	return nil
 }

@@ -143,12 +143,13 @@ func (server *Server) updateProfile(ctx *gin.Context) {
 	// Invalidate Redis cache for this user
 	server.invalidateUserCache(ctx, authPayload.UserID, currentUser.Email, currentUser.PhoneNumber)
 
-	err = server.cacheUserData(ctx, user)
-	if err != nil {
-		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
-		return
+	if req.Email == "" {
+		err = server.cacheUserData(ctx, user)
+		if err != nil {
+			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+			return
+		}
 	}
-
 	ctx.JSON(http.StatusOK, gin.H{
 		"profile": profile,
 		"user":    user,

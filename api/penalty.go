@@ -85,6 +85,17 @@ func (server *Server) cancelReservation(ctx *gin.Context) {
 		return
 	}
 
+	argReservation := db.UpdateReservationParams{
+		Status: db.TicketStatusCANCELED,
+		ID:     reservation.ID,
+	}
+
+	_, err = server.Queries.UpdateReservation(ctx, argReservation)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
 	penalty, err := server.Queries.GetTicketPenalties(ctx, reservation.ID)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -123,6 +134,17 @@ func (server *Server) cancelReservation(ctx *gin.Context) {
 	}
 
 	err = server.Queries.AddToUserWallet(ctx, argWallet)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	argPaymentStatus := db.UpdatePaymentStatusParams{
+		Status: db.PaymentStatusFAILED,
+		ID: reservation.PaymentID,
+	}
+
+	_, err = server.Queries.UpdatePaymentStatus(ctx, argPaymentStatus)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return

@@ -290,9 +290,7 @@ func (server *Server) loginUserRedis(ctx *gin.Context) {
 		var user db.User
 		if err := json.Unmarshal([]byte(cachedUser), &user); err == nil {
 
-			fmt.Println(user.EmailVerified, user.PhoneVerified)
-
-			if user.EmailVerified == false && user.PhoneVerified == false {
+			if !user.EmailVerified && !user.PhoneVerified {
 				ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("verify your email first")))
 				return
 			}
@@ -339,7 +337,7 @@ func (server *Server) loginUserRedis(ctx *gin.Context) {
 		return
 	}
 
-	if user.EmailVerified == false && user.PhoneVerified == false {
+	if !user.EmailVerified && !user.PhoneVerified {
 		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("verify your email first")))
 		return
 	}
