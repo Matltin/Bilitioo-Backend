@@ -9,7 +9,7 @@ import (
 )
 
 func TestCreatePayment(t *testing.T) {
-ctx := context.Background()
+	ctx := context.Background()
 
 	// First create a user
 	createUserParams := CreateUserParams{
@@ -39,7 +39,7 @@ ctx := context.Background()
 }
 
 func TestUpdatePayment(t *testing.T) {
-ctx := context.Background()
+	ctx := context.Background()
 
 	// First create a user and payment
 	createUserParams := CreateUserParams{
@@ -76,7 +76,7 @@ ctx := context.Background()
 }
 
 func TestUpdatePaymentStatus(t *testing.T) {
-ctx := context.Background()
+	ctx := context.Background()
 
 	// First create a user and payment
 	createUserParams := CreateUserParams{
@@ -111,7 +111,7 @@ ctx := context.Background()
 }
 
 func TestUpdatePaymentAmount(t *testing.T) {
-ctx := context.Background()
+	ctx := context.Background()
 
 	// First create a user and payment
 	createUserParams := CreateUserParams{
