@@ -6,7 +6,6 @@ on:
     pull_request:
       branches: [main]
 
-
 jobs:
     build:
         name: Build
@@ -46,10 +45,11 @@ jobs:
                 rm migrate.deb
                 which migrate
 
-          - name: Initilaze db
+          - name: Initialize db
             run: make migrateup
+          
+          - name: Tidy dependencies
+            run: go mod tidy
           
           - name: Run Tests
             run: make test
-
-        
