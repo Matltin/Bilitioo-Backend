@@ -22,7 +22,7 @@ services:
       - DB_SOURCE=postgresql://root:secret@postgres:5432/bilitioo?sslmode=disable
     depends_on:
       - postgres
-    entypoint: [ "/app/wait-for.sh", "postgres:5432", "--", "/app/ start.sh" ]
+    entrypoint: ["/app/wait-for.sh", "postgres:5432", "--", "/app/start.sh"]
     command: ["/app/main"]
 
   pgadmin:
