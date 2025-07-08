@@ -64,7 +64,7 @@ func TestUpdatePayment(t *testing.T) {
 
 	// Test update payment
 	updateParams := UpdatePaymentParams{
-		Type:   "TICKET",    // Assuming PaymentType enum
+		Type:   "CASH",    // Assuming PaymentType enum
 		Status: "COMPLETED", // Assuming PaymentStatus enum
 		ID:     payment.ID,
 	}
