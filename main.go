@@ -47,6 +47,7 @@ func main() {
 	server.Start(":8080")
 }
 
+// send email task processor
 func runTaskProcessor(config util.Config, redisOpt asynq.RedisClientOpt, store *db.Queries) {
 	mail := mail.NewGmailSender(config.EmailSenderName, config.EmailSenderAdderss, config.EmailSenderPassword)
 	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, store, mail)
@@ -56,6 +57,7 @@ func runTaskProcessor(config util.Config, redisOpt asynq.RedisClientOpt, store *
 	}
 }
 
+// check expired reservation processor
 func runScheduler(redisOpt asynq.RedisClientOpt, distributor worker.TaskDistributor) {
 	scheduler := asynq.NewScheduler(redisOpt, nil)
 
@@ -64,7 +66,7 @@ func runScheduler(redisOpt asynq.RedisClientOpt, distributor worker.TaskDistribu
 		log.Fatalf("failed to register cron job: %v", err)
 	}
 
-	fmt.Println("✅ Scheduler started.")
+	fmt.Println("Scheduler started.")
 	if err := scheduler.Run(); err != nil {
 		log.Fatalf("failed to run scheduler: %v", err)
 	}
