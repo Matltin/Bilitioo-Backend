@@ -23,7 +23,10 @@
     "paths": {
         "/city": {
             "get": {
-                "description": "Returns a list of all available cities.",
+                "description": "Returns a list of all cities available for booking.",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
@@ -45,65 +48,9 @@
                         "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
-                        }
-                    }
-                }
-            },
-            "post": {
-                "security": [
-                    {
-                        "BearerAuth": []
-                    }
-                ],
-                "description": "Returns a list of tickets for a specific route and vehicle type",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "Tickets"
-                ],
-                "summary": "Search tickets by origin, destination, and vehicle type",
-                "parameters": [
-                    {
-                        "description": "Search Parameters",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/api.searchTicketsByCitiesRequest"
-                        }
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/db.SearchTicketsByCitiesRow"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
-                        }
-                    },
-                    "500": {
-                        "description": "Internal Server Error",
-                        "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -167,30 +114,30 @@
                 }
             }
         },
-        "/verify-email": {
-            "get": {
-                "description": "Verifies a user's email using the verification link parameters (id and secret_code).",
+        "/penalty/{ticket_id}": {
+            "put": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Cancel a ticket reservation and calculate penalty refund. Requires authentication.",
+                "consumes": [
+                    "application/json"
+                ],
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
-                    "Auth"
+                    "Reservation"
                 ],
-                "summary": "Verify user's email",
+                "summary": "Cancel a reservation",
                 "parameters": [
                     {
                         "type": "integer",
-                        "format": "int64",
-                        "description": "Verification ID",
-                        "name": "id",
-                        "in": "query",
-                        "required": true
-                    },
-                    {
-                        "type": "string",
-                        "description": "Secret verification code",
-                        "name": "secret_code",
-                        "in": "query",
+                        "description": "Ticket ID",
+                        "name": "ticket_id",
+                        "in": "path",
                         "required": true
                     }
                 ],
@@ -198,22 +145,223 @@
                     "200": {
                         "description": "OK",
                         "schema": {
-                            "type": "object",
-                            "additionalProperties": true
+                            "$ref": "#/definitions/api.cancelReservationResponse"
                         }
                     },
                     "400": {
                         "description": "Bad Request",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Unauthorized",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     },
                     "500": {
                         "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
-                            "additionalProperties": true
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/ticket-penalties/{ticket_id}": {
+            "get": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Retrieve penalties associated with a specific ticket. Requires authentication.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Penalties"
+                ],
+                "summary": "Get penalties for a ticket",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Ticket ID",
+                        "name": "ticket_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "List of penalties",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.Penalty"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/tickets/search": {
+            "post": {
+                "description": "Search tickets by origin city, destination city, and vehicle type.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Search tickets",
+                "parameters": [
+                    {
+                        "description": "Search request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.searchTicketsByCitiesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.SearchTicketsByCitiesRow"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/verify-email": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Confirms email ownership by validating a verification code. Requires authentication if user is logged in.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Verify user email",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
                         }
                     }
                 }
@@ -229,6 +377,23 @@
                 },
                 "province": {
                     "type": "string"
+                }
+            }
+        },
+        "api.cancelReservationResponse": {
+            "type": "object",
+            "properties": {
+                "amount_refunded": {
+                    "type": "integer"
+                },
+                "change_reservation": {
+                    "$ref": "#/definitions/db.ChangeReservation"
+                },
+                "message": {
+                    "type": "string"
+                },
+                "ticket_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -301,6 +466,29 @@
                 }
             }
         },
+        "db.ChangeReservation": {
+            "type": "object",
+            "properties": {
+                "admin_id": {
+                    "type": "integer"
+                },
+                "from_status": {
+                    "$ref": "#/definitions/db.TicketStatus"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "reservation_id": {
+                    "type": "integer"
+                },
+                "to_status": {
+                    "$ref": "#/definitions/db.TicketStatus"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
         "db.CheckReservationTicketStatus": {
             "type": "string",
             "enum": [
@@ -311,6 +499,26 @@
                 "CheckReservationTicketStatusRESERVED",
                 "CheckReservationTicketStatusNOTRESERVED"
             ]
+        },
+        "db.Penalty": {
+            "type": "object",
+            "properties": {
+                "after_day": {
+                    "type": "integer"
+                },
+                "befor_day": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "penalty_text": {
+                    "type": "string"
+                },
+                "vehicle_id": {
+                    "type": "integer"
+                }
+            }
         },
         "db.SearchTicketsByCitiesRow": {
             "type": "object",
@@ -361,6 +569,21 @@
                     "$ref": "#/definitions/db.VehicleType"
                 }
             }
+        },
+        "db.TicketStatus": {
+            "type": "string",
+            "enum": [
+                "RESERVED",
+                "RESERVING",
+                "CANCELED",
+                "CANCELED-BY-TIME"
+            ],
+            "x-enum-varnames": [
+                "TicketStatusRESERVED",
+                "TicketStatusRESERVING",
+                "TicketStatusCANCELED",
+                "TicketStatusCANCELEDBYTIME"
+            ]
         },
         "db.VehicleType": {
             "type": "string",

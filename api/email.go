@@ -11,18 +11,18 @@ import (
 )
 
 // verifyEmail godoc
-// @Summary      Verify user email
-// @Description  Confirms email ownership by validating a verification code. Requires authentication if user is logged in.
-// @Tags         User
-// @Accept       json
-// @Produce      json
-// @Param        request body verifyEmailRequest true "Email verification request"
-// @Success      200 {object} map[string]string
-// @Failure      400 {object} map[string]string
-// @Failure      404 {object} map[string]string
-// @Failure      500 {object} map[string]string
-// @Security     BearerAuth
-// @Router       /verify-email [post]
+//
+//	@Summary		Verify user email
+//	@Description	Confirms email ownership by validating a verification code. Requires authentication if user is logged in.
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{object}	map[string]string
+//	@Failure		400	{object}	map[string]string
+//	@Failure		404	{object}	map[string]string
+//	@Failure		500	{object}	map[string]string
+//	@Security		BearerAuth
+//	@Router			/verify-email [post]
 func (server *Server) verifyEmail(ctx *gin.Context) {
 	// Get query parameters
 	idParam := ctx.Query("id")

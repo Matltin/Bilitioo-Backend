@@ -19,14 +19,15 @@ type CityResponse struct {
 }
 
 // getCities godoc
-// @Summary      Get all cities
-// @Description  Returns a list of all cities available for booking.
-// @Tags         Cities
-// @Accept       json
-// @Produce      json
-// @Success      200 {array} api.CityResponse
-// @Failure      500 {object} map[string]string
-// @Router       /city [get]
+//
+//	@Summary		Get all cities
+//	@Description	Returns a list of all cities available for booking.
+//	@Tags			Cities
+//	@Accept			json
+//	@Produce		json
+//	@Success		200	{array}		api.CityResponse
+//	@Failure		500	{object}	map[string]string
+//	@Router			/city [get]
 func (server *Server) getCities(ctx *gin.Context) {
 	cities, err := server.Queries.GetCities(ctx)
 	if err != nil {
@@ -44,16 +45,17 @@ type searchTicketsByCitiesRequest struct {
 }
 
 // searchTickets godoc
-// @Summary      Search tickets
-// @Description  Search tickets by origin city, destination city, and vehicle type.
-// @Tags         Tickets
-// @Accept       json
-// @Produce      json
-// @Param        request body searchTicketsByCitiesRequest true "Search request"
-// @Success      200 {array} db.SearchTicketsByCitiesRow
-// @Failure      400 {object} map[string]string
-// @Failure      500 {object} map[string]string
-// @Router       /tickets/search [post]
+//
+//	@Summary		Search tickets
+//	@Description	Search tickets by origin city, destination city, and vehicle type.
+//	@Tags			Tickets
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		searchTicketsByCitiesRequest	true	"Search request"
+//	@Success		200		{array}		db.SearchTicketsByCitiesRow
+//	@Failure		400		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/tickets/search [post]
 func (server *Server) searchTicketsByCities(ctx *gin.Context) {
 	var req searchTicketsByCitiesRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {

@@ -7,6 +7,17 @@ definitions:
       province:
         type: string
     type: object
+  api.cancelReservationResponse:
+    properties:
+      amount_refunded:
+        type: integer
+      change_reservation:
+        $ref: '#/definitions/db.ChangeReservation'
+      message:
+        type: string
+      ticket_id:
+        type: integer
+    type: object
   api.payPaymentRequest:
     properties:
       payment_id:
@@ -58,6 +69,21 @@ definitions:
     - origin_city_id
     - vehicle_type
     type: object
+  db.ChangeReservation:
+    properties:
+      admin_id:
+        type: integer
+      from_status:
+        $ref: '#/definitions/db.TicketStatus'
+      id:
+        type: integer
+      reservation_id:
+        type: integer
+      to_status:
+        $ref: '#/definitions/db.TicketStatus'
+      user_id:
+        type: integer
+    type: object
   db.CheckReservationTicketStatus:
     enum:
     - RESERVED
@@ -66,6 +92,19 @@ definitions:
     x-enum-varnames:
     - CheckReservationTicketStatusRESERVED
     - CheckReservationTicketStatusNOTRESERVED
+  db.Penalty:
+    properties:
+      after_day:
+        type: integer
+      befor_day:
+        type: integer
+      id:
+        type: integer
+      penalty_text:
+        type: string
+      vehicle_id:
+        type: integer
+    type: object
   db.SearchTicketsByCitiesRow:
     properties:
       amount:
@@ -99,6 +138,18 @@ definitions:
       vehicle_type:
         $ref: '#/definitions/db.VehicleType'
     type: object
+  db.TicketStatus:
+    enum:
+    - RESERVED
+    - RESERVING
+    - CANCELED
+    - CANCELED-BY-TIME
+    type: string
+    x-enum-varnames:
+    - TicketStatusRESERVED
+    - TicketStatusRESERVING
+    - TicketStatusCANCELED
+    - TicketStatusCANCELEDBYTIME
   db.VehicleType:
     enum:
     - BUS
@@ -125,7 +176,9 @@ info:
 paths:
   /city:
     get:
-      description: Returns a list of all available cities.
+      consumes:
+      - application/json
+      description: Returns a list of all cities available for booking.
       produces:
       - application/json
       responses:
@@ -138,49 +191,12 @@ paths:
         "500":
           description: Internal Server Error
           schema:
-            additionalProperties: true
+            additionalProperties:
+              type: string
             type: object
       summary: Get all cities
       tags:
       - Cities
-    post:
-      consumes:
-      - application/json
-      description: Returns a list of tickets for a specific route and vehicle type
-      parameters:
-      - description: Search Parameters
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/api.searchTicketsByCitiesRequest'
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/db.SearchTicketsByCitiesRow'
-        "400":
-          description: Bad Request
-          schema:
-            additionalProperties: true
-            type: object
-        "404":
-          description: Not Found
-          schema:
-            additionalProperties: true
-            type: object
-        "500":
-          description: Internal Server Error
-          schema:
-            additionalProperties: true
-            type: object
-      security:
-      - BearerAuth: []
-      summary: Search tickets by origin, destination, and vehicle type
-      tags:
-      - Tickets
   /payment:
     post:
       consumes:
@@ -218,43 +234,172 @@ paths:
       summary: Pay for a reservation
       tags:
       - Payment
-  /verify-email:
-    get:
-      description: Verifies a user's email using the verification link parameters
-        (id and secret_code).
+  /penalty/{ticket_id}:
+    put:
+      consumes:
+      - application/json
+      description: Cancel a ticket reservation and calculate penalty refund. Requires
+        authentication.
       parameters:
-      - description: Verification ID
-        format: int64
-        in: query
-        name: id
+      - description: Ticket ID
+        in: path
+        name: ticket_id
         required: true
         type: integer
-      - description: Secret verification code
-        in: query
-        name: secret_code
-        required: true
-        type: string
       produces:
       - application/json
       responses:
         "200":
           description: OK
           schema:
-            additionalProperties: true
-            type: object
+            $ref: '#/definitions/api.cancelReservationResponse'
         "400":
           description: Bad Request
           schema:
-            additionalProperties: true
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
             type: object
         "500":
           description: Internal Server Error
           schema:
-            additionalProperties: true
+            additionalProperties:
+              type: string
             type: object
-      summary: Verify user's email
+      security:
+      - BearerAuth: []
+      summary: Cancel a reservation
       tags:
-      - Auth
+      - Reservation
+  /ticket-penalties/{ticket_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve penalties associated with a specific ticket. Requires
+        authentication.
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: ticket_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of penalties
+          schema:
+            items:
+              $ref: '#/definitions/db.Penalty'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get penalties for a ticket
+      tags:
+      - Penalties
+  /tickets/search:
+    post:
+      consumes:
+      - application/json
+      description: Search tickets by origin city, destination city, and vehicle type.
+      parameters:
+      - description: Search request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.searchTicketsByCitiesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.SearchTicketsByCitiesRow'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Search tickets
+      tags:
+      - Tickets
+  /verify-email:
+    post:
+      consumes:
+      - application/json
+      description: Confirms email ownership by validating a verification code. Requires
+        authentication if user is logged in.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Verify user email
+      tags:
+      - Users
 schemes:
 - http
 securityDefinitions:
