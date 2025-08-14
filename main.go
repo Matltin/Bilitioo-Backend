@@ -13,8 +13,18 @@ import (
 	"github.com/Matltin/Bilitioo-Backend/worker"
 	"github.com/hibiken/asynq"
 	_ "github.com/lib/pq"
+
+	_ "github.com/Matltin/Bilitioo-Backend/docs"
+	_ "github.com/swaggo/files"       // swagger embed files
+	_ "github.com/swaggo/gin-swagger" // gin-swagger middleware
 )
 
+//	@contact.name	API Support
+//	@contact.url	http://www.swagger.io/support
+//	@contact.email	support@swagger.io
+
+// @license.name	Apache 2.0
+// @license.url	http://www.apache.org/licenses/LICENSE-2.0.html
 func main() {
 	// 1. config
 	config, err := util.LoadConfig(".")
@@ -44,7 +54,8 @@ func main() {
 
 	// 5. setup server
 	server := api.NewServer(config, taskDistributor, Queries, redis)
-	server.Start(":8080")
+
+	server.Start(":3000")
 }
 
 // send email task processor

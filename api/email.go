@@ -52,8 +52,6 @@ func (server *Server) verifyEmail(ctx *gin.Context) {
 		return
 	}
 
-	
-
 	user, err := server.Queries.GetUserByID(ctx, verifyEmail.UserID)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))

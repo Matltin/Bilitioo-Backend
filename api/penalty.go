@@ -141,7 +141,7 @@ func (server *Server) cancelReservation(ctx *gin.Context) {
 
 	argPaymentStatus := db.UpdatePaymentStatusParams{
 		Status: db.PaymentStatusFAILED,
-		ID: reservation.PaymentID,
+		ID:     reservation.PaymentID,
 	}
 
 	_, err = server.Queries.UpdatePaymentStatus(ctx, argPaymentStatus)

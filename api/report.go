@@ -235,11 +235,11 @@ func (server *Server) createReport(ctx *gin.Context) {
 
 	arg := db.CreateReportParams{
 		ReservationID: req.ReservationID,
-		RequestType: db.RequestType(req.RequestType),
-		RequestText: req.RequestText,
-		UserID: authPayload.UserID,
+		RequestType:   db.RequestType(req.RequestType),
+		RequestText:   req.RequestText,
+		UserID:        authPayload.UserID,
 	}
-	
+
 	report, err := server.Queries.CreateReport(ctx, arg)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))

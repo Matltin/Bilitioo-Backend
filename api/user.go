@@ -102,8 +102,6 @@ func isValidEmail(email string) bool {
 // 	ctx.JSON(http.StatusOK, nil)
 // }
 
-
-
 // func (server *Server) logInUser(ctx *gin.Context) {
 // 	var req logInUserRequest
 // 	if err := ctx.ShouldBindJSON(&req); err != nil {

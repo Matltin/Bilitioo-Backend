@@ -86,7 +86,7 @@ func (server *Server) searchTicketsByCities(ctx *gin.Context) {
 	ctx.Set(userActivityID, userActivity.ID)
 
 	ctx.JSON(http.StatusOK, gin.H{
-		"tickets": tickets,
+		"tickets":      tickets,
 		userActivityID: userActivity.ID,
 	})
 }

@@ -9,6 +9,8 @@ import (
 	"github.com/Matltin/Bilitioo-Backend/util"
 	"github.com/Matltin/Bilitioo-Backend/worker"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type Server struct {
@@ -42,36 +44,39 @@ func NewServer(config util.Config, distributor worker.TaskDistributor, db *db.Qu
 func (ser *Server) setupRouter() {
 	router := gin.Default()
 
+	swaggerUrl := ginSwagger.URL("http://localhost:3000/swagger/doc.json")
+
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, swaggerUrl))
+
 	router.POST("/sign-in", ser.registerUserRedis) //1
-	router.POST("/log-in", ser.loginUserRedis)  //2
+	router.POST("/log-in", ser.loginUserRedis)     //2
 	router.GET("/verify-email", ser.verifyEmail)
 
 	authRoutes := router.Group("/").Use(authMiddleware(ser.tokenMaker))
 
-	authRoutes.PUT("/profile", ser.updateProfile) //3
-	authRoutes.GET("/profile", ser.getUserProfile)  //3
-	authRoutes.GET("/city", ser.getCities)  //4
-	authRoutes.POST("/city", ser.searchTicketsByCities) //4
-	authRoutes.GET("/search-tickets", ser.searchTickets) //5
-	authRoutes.GET("/ticket-detail/:ticket_id", ser.getTicketDetails)  //6
-	authRoutes.POST("/reservation", ser.createReservation)  //7
+	authRoutes.PUT("/profile", ser.updateProfile)                     //3
+	authRoutes.GET("/profile", ser.getUserProfile)                    //3
+	authRoutes.GET("/city", ser.getCities)                            //4
+	authRoutes.POST("/city", ser.searchTicketsByCities)               //4
+	authRoutes.GET("/search-tickets", ser.searchTickets)              //5
+	authRoutes.GET("/ticket-detail/:ticket_id", ser.getTicketDetails) //6
+	authRoutes.POST("/reservation", ser.createReservation)            //7
 	authRoutes.GET("/completedReservation", ser.getCompletedUserReservation)
 	authRoutes.GET("/allReservation", ser.getAllUserReservation)
-	authRoutes.POST("/payment", ser.payPayment)  //8
+	authRoutes.POST("/payment", ser.payPayment) //8
 
+	authRoutes.GET("/ticket-penalties/:ticket_id", ser.getTicketPenalties) //9
+	authRoutes.GET("/penalty/:ticket_id", ser.getTicketPenalties)          //9
+	authRoutes.PUT("/penalty/:ticket_id", ser.cancelReservation)           //9, 12
 
-	authRoutes.GET("/ticket-penalties/:ticket_id", ser.getTicketPenalties)  //9
-	authRoutes.GET("/penalty/:ticket_id", ser.getTicketPenalties) //9
-	authRoutes.PUT("/penalty/:ticket_id", ser.cancelReservation)  //9, 12
+	authRoutes.GET("/report", ser.getReports)                  //10
+	authRoutes.PUT("/manage-report", ser.updateTicketByReport) //10
+	authRoutes.PUT("/report", ser.answerReport)                //13
+	authRoutes.POST("/report", ser.createReport)               //13
 
-	authRoutes.GET("/report", ser.getReports) //10
-	authRoutes.PUT("/manage-report", ser.updateTicketByReport)  //10
-	authRoutes.PUT("/report", ser.answerReport) //13
-	authRoutes.POST("/report", ser.createReport) //13
-
-	authRoutes.GET("/completed-tickets", ser.getAllUserCompletedTickets) //11
+	authRoutes.GET("/completed-tickets", ser.getAllUserCompletedTickets)       //11
 	authRoutes.GET("/notcompleted-tickets", ser.getAllUserNotCompletedTickets) //11
-	authRoutes.GET("/tickets", ser.getAllTickets) //11
+	authRoutes.GET("/tickets", ser.getAllTickets)                              //11
 
 	ser.router = router
 }
