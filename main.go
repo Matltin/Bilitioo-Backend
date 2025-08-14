@@ -19,12 +19,20 @@ import (
 	_ "github.com/swaggo/gin-swagger" // gin-swagger middleware
 )
 
-//	@contact.name	API Support
-//	@contact.url	http://www.swagger.io/support
-//	@contact.email	support@swagger.io
+//	@title			Bilitioo API
+//	@version		1.0
+//	@description	API for Bilitioo ticket booking system.
+//	@termsOfService	http://bilitioo.com/terms/
 
-// @license.name	Apache 2.0
-// @license.url	http://www.apache.org/licenses/LICENSE-2.0.html
+//	@contact.name	API Support
+//	@contact.url	http://bilitioo.com/support
+//	@contact.email	support@bilitioo.com
+
+//	@license.name	MIT
+//	@license.url	https://opensource.org/licenses/MIT
+
+// @host		localhost:3000
+// @BasePath	/
 func main() {
 	// 1. config
 	config, err := util.LoadConfig(".")

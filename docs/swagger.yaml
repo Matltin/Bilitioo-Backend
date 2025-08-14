@@ -1,10 +1,150 @@
+basePath: /
+definitions:
+  api.CityResponse:
+    properties:
+      county:
+        type: string
+      province:
+        type: string
+    type: object
+  api.searchTicketsByCitiesRequest:
+    properties:
+      destination_city_id:
+        type: integer
+      origin_city_id:
+        type: integer
+      vehicle_type:
+        enum:
+        - BUS
+        - AIRPLANE
+        - TRAIN
+        type: string
+    required:
+    - destination_city_id
+    - origin_city_id
+    - vehicle_type
+    type: object
+  db.CheckReservationTicketStatus:
+    enum:
+    - RESERVED
+    - NOT_RESERVED
+    type: string
+    x-enum-varnames:
+    - CheckReservationTicketStatusRESERVED
+    - CheckReservationTicketStatusNOTRESERVED
+  db.SearchTicketsByCitiesRow:
+    properties:
+      amount:
+        type: integer
+      arrival_time:
+        type: string
+      capacity:
+        type: integer
+      company_name:
+        type: string
+      departure_time:
+        type: string
+      destination_city_id:
+        type: integer
+      destination_county:
+        type: string
+      destination_province:
+        type: string
+      origin_city_id:
+        type: integer
+      origin_county:
+        type: string
+      origin_province:
+        type: string
+      route_id:
+        type: integer
+      status:
+        $ref: '#/definitions/db.CheckReservationTicketStatus'
+      ticket_id:
+        type: integer
+      vehicle_type:
+        $ref: '#/definitions/db.VehicleType'
+    type: object
+  db.VehicleType:
+    enum:
+    - BUS
+    - TRAIN
+    - AIRPLANE
+    type: string
+    x-enum-varnames:
+    - VehicleTypeBUS
+    - VehicleTypeTRAIN
+    - VehicleTypeAIRPLANE
+host: localhost:3000
 info:
   contact:
-    email: support@swagger.io
+    email: support@bilitioo.com
     name: API Support
-    url: http://www.swagger.io/support
+    url: http://bilitioo.com/support
+  description: API for Bilitioo ticket booking system.
   license:
-    name: Apache 2.0
-    url: http://www.apache.org/licenses/LICENSE-2.0.html
-paths: {}
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://bilitioo.com/terms/
+  title: Bilitioo API
+  version: "1.0"
+paths:
+  /city:
+    get:
+      description: Returns a list of all available cities.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/api.CityResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Get all cities
+      tags:
+      - Cities
+    post:
+      consumes:
+      - application/json
+      description: Returns a list of tickets for a specific route and vehicle type
+      parameters:
+      - description: Search Parameters
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.searchTicketsByCitiesRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.SearchTicketsByCitiesRow'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Search tickets by origin, destination, and vehicle type
+      tags:
+      - Tickets
 swagger: "2.0"

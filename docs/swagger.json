@@ -1,15 +1,221 @@
 {
     "swagger": "2.0",
     "info": {
+        "description": "API for Bilitioo ticket booking system.",
+        "title": "Bilitioo API",
+        "termsOfService": "http://bilitioo.com/terms/",
         "contact": {
             "name": "API Support",
-            "url": "http://www.swagger.io/support",
-            "email": "support@swagger.io"
+            "url": "http://bilitioo.com/support",
+            "email": "support@bilitioo.com"
         },
         "license": {
-            "name": "Apache 2.0",
-            "url": "http://www.apache.org/licenses/LICENSE-2.0.html"
+            "name": "MIT",
+            "url": "https://opensource.org/licenses/MIT"
+        },
+        "version": "1.0"
+    },
+    "host": "localhost:3000",
+    "basePath": "/",
+    "paths": {
+        "/city": {
+            "get": {
+                "description": "Returns a list of all available cities.",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Cities"
+                ],
+                "summary": "Get all cities",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/api.CityResponse"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            },
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Returns a list of tickets for a specific route and vehicle type",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Search tickets by origin, destination, and vehicle type",
+                "parameters": [
+                    {
+                        "description": "Search Parameters",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.searchTicketsByCitiesRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.SearchTicketsByCitiesRow"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
         }
     },
-    "paths": {}
+    "definitions": {
+        "api.CityResponse": {
+            "type": "object",
+            "properties": {
+                "county": {
+                    "type": "string"
+                },
+                "province": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.searchTicketsByCitiesRequest": {
+            "type": "object",
+            "required": [
+                "destination_city_id",
+                "origin_city_id",
+                "vehicle_type"
+            ],
+            "properties": {
+                "destination_city_id": {
+                    "type": "integer"
+                },
+                "origin_city_id": {
+                    "type": "integer"
+                },
+                "vehicle_type": {
+                    "type": "string",
+                    "enum": [
+                        "BUS",
+                        "AIRPLANE",
+                        "TRAIN"
+                    ]
+                }
+            }
+        },
+        "db.CheckReservationTicketStatus": {
+            "type": "string",
+            "enum": [
+                "RESERVED",
+                "NOT_RESERVED"
+            ],
+            "x-enum-varnames": [
+                "CheckReservationTicketStatusRESERVED",
+                "CheckReservationTicketStatusNOTRESERVED"
+            ]
+        },
+        "db.SearchTicketsByCitiesRow": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "arrival_time": {
+                    "type": "string"
+                },
+                "capacity": {
+                    "type": "integer"
+                },
+                "company_name": {
+                    "type": "string"
+                },
+                "departure_time": {
+                    "type": "string"
+                },
+                "destination_city_id": {
+                    "type": "integer"
+                },
+                "destination_county": {
+                    "type": "string"
+                },
+                "destination_province": {
+                    "type": "string"
+                },
+                "origin_city_id": {
+                    "type": "integer"
+                },
+                "origin_county": {
+                    "type": "string"
+                },
+                "origin_province": {
+                    "type": "string"
+                },
+                "route_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "$ref": "#/definitions/db.CheckReservationTicketStatus"
+                },
+                "ticket_id": {
+                    "type": "integer"
+                },
+                "vehicle_type": {
+                    "$ref": "#/definitions/db.VehicleType"
+                }
+            }
+        },
+        "db.VehicleType": {
+            "type": "string",
+            "enum": [
+                "BUS",
+                "TRAIN",
+                "AIRPLANE"
+            ],
+            "x-enum-varnames": [
+                "VehicleTypeBUS",
+                "VehicleTypeTRAIN",
+                "VehicleTypeAIRPLANE"
+            ]
+        }
+    }
 }
