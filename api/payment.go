@@ -21,6 +21,25 @@ type payPaymentRequest struct {
 	UserActivityID    int64  `json:"user_activity_id"`
 }
 
+type payPaymentResponse struct {
+	Payment      db.Payment                `json:"payment"`
+	Reservations []db.UpdateReservationRow `json:"reservations"`
+	UserActivity db.UpdateUserActivityRow  `json:"user_activity"`
+}
+
+// payPayment godoc
+//
+//	@Summary		Pay for a reservation
+//	@Description	Updates payment and reservation status. Requires authentication.
+//	@Tags			Payment
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		payPaymentRequest	true	"Payment request body"
+//	@Success		200		{object}	map[string]interface{}
+//	@Failure		400		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Security		BearerAuth
+//	@Router			/payment [post]
 func (server *Server) payPayment(ctx *gin.Context) {
 	var req payPaymentRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -162,7 +181,7 @@ func (server *Server) payPayment(ctx *gin.Context) {
 
 	}
 
-	var user_activity db.UpdateUserActivityRow
+	var userActivity db.UpdateUserActivityRow
 
 	if req.UserActivityID > 0 {
 
@@ -171,17 +190,17 @@ func (server *Server) payPayment(ctx *gin.Context) {
 			Status: db.ActivityStatusPURCHASED,
 		}
 
-		user_activity, err = server.Queries.UpdateUserActivity(ctx, argUserActivity)
+		userActivity, err = server.Queries.UpdateUserActivity(ctx, argUserActivity)
 		if err != nil {
 			ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 			return
 		}
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"payment":       payment,
-		"reservations":  reservations,
-		"user_activity": user_activity,
+	ctx.JSON(http.StatusOK, payPaymentResponse{
+		Payment:      payment,
+		Reservations: reservations,
+		UserActivity: userActivity,
 	})
 }
 

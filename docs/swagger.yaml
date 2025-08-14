@@ -7,6 +7,40 @@ definitions:
       province:
         type: string
     type: object
+  api.payPaymentRequest:
+    properties:
+      payment_id:
+        type: integer
+      payment_status:
+        enum:
+        - PENDING
+        - COMPLETED
+        - FAILED
+        - REFUNDED
+        type: string
+      reservation_status:
+        enum:
+        - RESERVED
+        - RESERVING
+        - CANCELED
+        - CANCELED-BY-TIME
+        type: string
+      type:
+        enum:
+        - CASH
+        - CREDIT_CARD
+        - WALLET
+        - BANK_TRANSFER
+        - CRYPTO
+        type: string
+      user_activity_id:
+        type: integer
+    required:
+    - payment_id
+    - payment_status
+    - reservation_status
+    - type
+    type: object
   api.searchTicketsByCitiesRequest:
     properties:
       destination_city_id:
@@ -78,15 +112,15 @@ definitions:
 host: localhost:3000
 info:
   contact:
-    email: support@bilitioo.com
+    email: support@example.com
     name: API Support
-    url: http://bilitioo.com/support
-  description: API for Bilitioo ticket booking system.
+    url: http://www.example.com/support
+  description: API for Bilitio ticket booking system.
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT
-  termsOfService: http://bilitioo.com/terms/
-  title: Bilitioo API
+  termsOfService: http://localhost:3000/swagger/index.html
+  title: Bilitio API
   version: "1.0"
 paths:
   /city:
@@ -147,4 +181,85 @@ paths:
       summary: Search tickets by origin, destination, and vehicle type
       tags:
       - Tickets
+  /payment:
+    post:
+      consumes:
+      - application/json
+      description: Updates payment and reservation status. Requires authentication.
+      parameters:
+      - description: Payment request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.payPaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Pay for a reservation
+      tags:
+      - Payment
+  /verify-email:
+    get:
+      description: Verifies a user's email using the verification link parameters
+        (id and secret_code).
+      parameters:
+      - description: Verification ID
+        format: int64
+        in: query
+        name: id
+        required: true
+        type: integer
+      - description: Secret verification code
+        in: query
+        name: secret_code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties: true
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties: true
+            type: object
+      summary: Verify user's email
+      tags:
+      - Auth
+schemes:
+- http
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
 swagger: "2.0"

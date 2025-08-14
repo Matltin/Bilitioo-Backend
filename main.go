@@ -19,20 +19,25 @@ import (
 	_ "github.com/swaggo/gin-swagger" // gin-swagger middleware
 )
 
-//	@title			Bilitioo API
+//	@title			Bilitio API
 //	@version		1.0
-//	@description	API for Bilitioo ticket booking system.
-//	@termsOfService	http://bilitioo.com/terms/
+//	@description	API for Bilitio ticket booking system.
+//	@termsOfService	http://localhost:3000/swagger/index.html
 
 //	@contact.name	API Support
-//	@contact.url	http://bilitioo.com/support
-//	@contact.email	support@bilitioo.com
+//	@contact.url	http://www.example.com/support
+//	@contact.email	support@example.com
 
 //	@license.name	MIT
 //	@license.url	https://opensource.org/licenses/MIT
 
-// @host		localhost:3000
-// @BasePath	/
+//	@host		localhost:3000
+//	@BasePath	/
+//	@schemes	http
+
+// @securityDefinitions.apikey	BearerAuth
+// @in							header
+// @name						Authorization
 func main() {
 	// 1. config
 	config, err := util.LoadConfig(".")
@@ -55,8 +60,8 @@ func main() {
 	taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
 
 	// 4. set worker
-	go runTaskProcessor(config, redisOpt, Queries)
-	go runScheduler(redisOpt, taskDistributor)
+	// go runTaskProcessor(config, redisOpt, Queries)
+	// go runScheduler(redisOpt, taskDistributor)
 
 	redis := db_redis.NewRedisClient(config.RedisAddress)
 

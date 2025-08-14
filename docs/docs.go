@@ -9,11 +9,11 @@ const docTemplate = `{
     "info": {
         "description": "{{escape .Description}}",
         "title": "{{.Title}}",
-        "termsOfService": "http://bilitioo.com/terms/",
+        "termsOfService": "http://localhost:3000/swagger/index.html",
         "contact": {
             "name": "API Support",
-            "url": "http://bilitioo.com/support",
-            "email": "support@bilitioo.com"
+            "url": "http://www.example.com/support",
+            "email": "support@example.com"
         },
         "license": {
             "name": "MIT",
@@ -111,6 +111,116 @@ const docTemplate = `{
                     }
                 }
             }
+        },
+        "/payment": {
+            "post": {
+                "security": [
+                    {
+                        "BearerAuth": []
+                    }
+                ],
+                "description": "Updates payment and reservation status. Requires authentication.",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Payment"
+                ],
+                "summary": "Pay for a reservation",
+                "parameters": [
+                    {
+                        "description": "Payment request body",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.payPaymentRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/verify-email": {
+            "get": {
+                "description": "Verifies a user's email using the verification link parameters (id and secret_code).",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Verify user's email",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "format": "int64",
+                        "description": "Verification ID",
+                        "name": "id",
+                        "in": "query",
+                        "required": true
+                    },
+                    {
+                        "type": "string",
+                        "description": "Secret verification code",
+                        "name": "secret_code",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    }
+                }
+            }
         }
     },
     "definitions": {
@@ -122,6 +232,51 @@ const docTemplate = `{
                 },
                 "province": {
                     "type": "string"
+                }
+            }
+        },
+        "api.payPaymentRequest": {
+            "type": "object",
+            "required": [
+                "payment_id",
+                "payment_status",
+                "reservation_status",
+                "type"
+            ],
+            "properties": {
+                "payment_id": {
+                    "type": "integer"
+                },
+                "payment_status": {
+                    "type": "string",
+                    "enum": [
+                        "PENDING",
+                        "COMPLETED",
+                        "FAILED",
+                        "REFUNDED"
+                    ]
+                },
+                "reservation_status": {
+                    "type": "string",
+                    "enum": [
+                        "RESERVED",
+                        "RESERVING",
+                        "CANCELED",
+                        "CANCELED-BY-TIME"
+                    ]
+                },
+                "type": {
+                    "type": "string",
+                    "enum": [
+                        "CASH",
+                        "CREDIT_CARD",
+                        "WALLET",
+                        "BANK_TRANSFER",
+                        "CRYPTO"
+                    ]
+                },
+                "user_activity_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -223,6 +378,13 @@ const docTemplate = `{
                 "VehicleTypeAIRPLANE"
             ]
         }
+    },
+    "securityDefinitions": {
+        "BearerAuth": {
+            "type": "apiKey",
+            "name": "Authorization",
+            "in": "header"
+        }
     }
 }`
 
@@ -231,9 +393,9 @@ var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "localhost:3000",
 	BasePath:         "/",
-	Schemes:          []string{},
-	Title:            "Bilitioo API",
-	Description:      "API for Bilitioo ticket booking system.",
+	Schemes:          []string{"http"},
+	Title:            "Bilitio API",
+	Description:      "API for Bilitio ticket booking system.",
 	InfoInstanceName: "swagger",
 	SwaggerTemplate:  docTemplate,
 	LeftDelim:        "{{",
