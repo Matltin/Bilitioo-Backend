@@ -28,6 +28,24 @@ type updateProfileRequest struct {
 	Email        string `json:"email"`
 }
 
+type updateProfileResponse struct {
+	Profile db.Profile `json:"profile"`
+	User    db.User    `json:"user"`
+}
+
+// updateProfile godoc
+//
+//	@Summary		Update user profile
+//	@Description	Update user profile details including name, contact info, password, and profile picture
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Param			updateProfileRequest	body		updateProfileRequest	true	"Profile update payload"
+//	@Success		200						{object}	updateProfileResponse
+//	@Failure		400						{object}	map[string]string
+//	@Failure		500						{object}	map[string]string
+//	@Security		ApiKeyAuth
+//	@Router			/profile [put]
 func (server *Server) updateProfile(ctx *gin.Context) {
 	var req updateProfileRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -150,9 +168,9 @@ func (server *Server) updateProfile(ctx *gin.Context) {
 			return
 		}
 	}
-	ctx.JSON(http.StatusOK, gin.H{
-		"profile": profile,
-		"user":    user,
+	ctx.JSON(http.StatusOK, updateProfileResponse{
+		Profile: profile,
+		User:    user,
 	})
 }
 
@@ -308,6 +326,16 @@ func (server *Server) cacheUserData(ctx *gin.Context, user db.User) error {
 // 	ctx.JSON(http.StatusOK, profile)
 // }
 
+// getUserProfile godoc
+//
+//	@Summary		Get user profile
+//	@Description	Get the profile of the authenticated user
+//	@Tags			Users
+//	@Produce		json
+//	@Success		200	{object}	db.GetUserProfileRow
+//	@Failure		500	{object}	map[string]string
+//	@Security		ApiKeyAuth
+//	@Router			/profile [get]
 func (server *Server) getUserProfile(ctx *gin.Context) {
 	authPayload := ctx.MustGet(authorizationPyloadKey).(*token.Payload)
 
