@@ -94,6 +94,26 @@ definitions:
     - origin_city_id
     - vehicle_type
     type: object
+  api.searchTicketsRequest:
+    properties:
+      departure_date:
+        type: string
+      destination_city_id:
+        type: integer
+      origin_city_id:
+        type: integer
+      vehicle_type:
+        enum:
+        - BUS
+        - TRAIN
+        - AIRPLANE
+        type: string
+    required:
+    - departure_date
+    - destination_city_id
+    - origin_city_id
+    - vehicle_type
+    type: object
   api.updateProfileRequest:
     properties:
       city_id:
@@ -299,6 +319,31 @@ definitions:
       status:
         $ref: '#/definitions/db.CheckReservationTicketStatus'
       ticket_id:
+        type: integer
+      vehicle_type:
+        $ref: '#/definitions/db.VehicleType'
+    type: object
+  db.Ticket:
+    properties:
+      amount:
+        type: integer
+      arrival_time:
+        type: string
+      count_stand:
+        type: integer
+      created_at:
+        type: string
+      departure_time:
+        type: string
+      id:
+        type: integer
+      route_id:
+        type: integer
+      seat_id:
+        type: integer
+      status:
+        $ref: '#/definitions/db.CheckReservationTicketStatus'
+      vehicle_id:
         type: integer
       vehicle_type:
         $ref: '#/definitions/db.VehicleType'
@@ -817,18 +862,9 @@ paths:
       summary: Get penalties for a ticket
       tags:
       - Penalties
-  /tickets/search:
-    post:
-      consumes:
-      - application/json
-      description: Search tickets by origin city, destination city, and vehicle type.
-      parameters:
-      - description: Search request
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/api.searchTicketsByCitiesRequest'
+  /tickets:
+    get:
+      description: Retrieve all tickets from the system
       produces:
       - application/json
       responses:
@@ -836,7 +872,83 @@ paths:
           description: OK
           schema:
             items:
-              $ref: '#/definitions/db.SearchTicketsByCitiesRow'
+              $ref: '#/definitions/db.Ticket'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all tickets
+      tags:
+      - tickets
+  /tickets/{ticket_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed info for a ticket by ID
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: ticket_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get ticket details
+      tags:
+      - tickets
+  /tickets/search:
+    post:
+      consumes:
+      - application/json
+      description: Search tickets by origin, destination, date, and vehicle type
+      parameters:
+      - description: Search tickets request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.searchTicketsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.Ticket'
             type: array
         "400":
           description: Bad Request
@@ -852,7 +964,61 @@ paths:
             type: object
       summary: Search tickets
       tags:
-      - Tickets
+      - tickets
+  /tickets/user/completed:
+    get:
+      description: Get all tickets the authenticated user has completed
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.Ticket'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get completed tickets for user
+      tags:
+      - tickets
+  /tickets/user/not-completed:
+    get:
+      description: Get all tickets the authenticated user has reserved but not completed
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.Ticket'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get not completed tickets for user
+      tags:
+      - tickets
   /verify-email:
     post:
       consumes:

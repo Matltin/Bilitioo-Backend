@@ -703,9 +703,50 @@
                 }
             }
         },
+        "/tickets": {
+            "get": {
+                "description": "Retrieve all tickets from the system",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tickets"
+                ],
+                "summary": "Get all tickets",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.Ticket"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/tickets/search": {
             "post": {
-                "description": "Search tickets by origin city, destination city, and vehicle type.",
+                "description": "Search tickets by origin, destination, date, and vehicle type",
                 "consumes": [
                     "application/json"
                 ],
@@ -713,17 +754,17 @@
                     "application/json"
                 ],
                 "tags": [
-                    "Tickets"
+                    "tickets"
                 ],
                 "summary": "Search tickets",
                 "parameters": [
                     {
-                        "description": "Search request",
+                        "description": "Search tickets request",
                         "name": "request",
                         "in": "body",
                         "required": true,
                         "schema": {
-                            "$ref": "#/definitions/api.searchTicketsByCitiesRequest"
+                            "$ref": "#/definitions/api.searchTicketsRequest"
                         }
                     }
                 ],
@@ -733,12 +774,154 @@
                         "schema": {
                             "type": "array",
                             "items": {
-                                "$ref": "#/definitions/db.SearchTicketsByCitiesRow"
+                                "$ref": "#/definitions/db.Ticket"
                             }
                         }
                     },
                     "400": {
                         "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/tickets/user/completed": {
+            "get": {
+                "description": "Get all tickets the authenticated user has completed",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tickets"
+                ],
+                "summary": "Get completed tickets for user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.Ticket"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/tickets/user/not-completed": {
+            "get": {
+                "description": "Get all tickets the authenticated user has reserved but not completed",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tickets"
+                ],
+                "summary": "Get not completed tickets for user",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.Ticket"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/tickets/{ticket_id}": {
+            "get": {
+                "description": "Retrieve detailed info for a ticket by ID",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "tickets"
+                ],
+                "summary": "Get ticket details",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Ticket ID",
+                        "name": "ticket_id",
+                        "in": "path",
+                        "required": true
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -950,6 +1133,34 @@
                         "BUS",
                         "AIRPLANE",
                         "TRAIN"
+                    ]
+                }
+            }
+        },
+        "api.searchTicketsRequest": {
+            "type": "object",
+            "required": [
+                "departure_date",
+                "destination_city_id",
+                "origin_city_id",
+                "vehicle_type"
+            ],
+            "properties": {
+                "departure_date": {
+                    "type": "string"
+                },
+                "destination_city_id": {
+                    "type": "integer"
+                },
+                "origin_city_id": {
+                    "type": "integer"
+                },
+                "vehicle_type": {
+                    "type": "string",
+                    "enum": [
+                        "BUS",
+                        "TRAIN",
+                        "AIRPLANE"
                     ]
                 }
             }
@@ -1261,6 +1472,44 @@
                     "$ref": "#/definitions/db.CheckReservationTicketStatus"
                 },
                 "ticket_id": {
+                    "type": "integer"
+                },
+                "vehicle_type": {
+                    "$ref": "#/definitions/db.VehicleType"
+                }
+            }
+        },
+        "db.Ticket": {
+            "type": "object",
+            "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "arrival_time": {
+                    "type": "string"
+                },
+                "count_stand": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "departure_time": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "route_id": {
+                    "type": "integer"
+                },
+                "seat_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "$ref": "#/definitions/db.CheckReservationTicketStatus"
+                },
+                "vehicle_id": {
                     "type": "integer"
                 },
                 "vehicle_type": {
