@@ -69,6 +69,32 @@ definitions:
     - origin_city_id
     - vehicle_type
     type: object
+  api.updateProfileRequest:
+    properties:
+      city_id:
+        type: integer
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      national_code:
+        type: string
+      password:
+        type: string
+      phone_number:
+        type: string
+      pic_dir:
+        type: string
+    type: object
+  api.updateProfileResponse:
+    properties:
+      profile:
+        $ref: '#/definitions/db.Profile'
+      user:
+        $ref: '#/definitions/db.User'
+    type: object
   db.ChangeReservation:
     properties:
       admin_id:
@@ -92,6 +118,37 @@ definitions:
     x-enum-varnames:
     - CheckReservationTicketStatusRESERVED
     - CheckReservationTicketStatusNOTRESERVED
+  db.GetUserProfileRow:
+    properties:
+      city_id:
+        type: integer
+      created_at:
+        type: string
+      email:
+        type: string
+      email_verified:
+        type: boolean
+      first_name:
+        type: string
+      last_name:
+        type: string
+      national_code:
+        type: string
+      phone_number:
+        type: string
+      phone_verified:
+        type: boolean
+      pic_dir:
+        type: string
+      role:
+        $ref: '#/definitions/db.Role'
+      status:
+        $ref: '#/definitions/db.UserStatus'
+      user_id:
+        type: integer
+      wallet:
+        type: integer
+    type: object
   db.Penalty:
     properties:
       after_day:
@@ -105,6 +162,31 @@ definitions:
       vehicle_id:
         type: integer
     type: object
+  db.Profile:
+    properties:
+      city_id:
+        type: integer
+      first_name:
+        type: string
+      last_name:
+        type: string
+      national_code:
+        type: string
+      pic_dir:
+        type: string
+      user_id:
+        type: integer
+      wallet:
+        type: integer
+    type: object
+  db.Role:
+    enum:
+    - ADMIN
+    - USER
+    type: string
+    x-enum-varnames:
+    - RoleADMIN
+    - RoleUSER
   db.SearchTicketsByCitiesRow:
     properties:
       amount:
@@ -150,6 +232,37 @@ definitions:
     - TicketStatusRESERVING
     - TicketStatusCANCELED
     - TicketStatusCANCELEDBYTIME
+  db.User:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      email_verified:
+        type: boolean
+      hashed_password:
+        type: string
+      id:
+        type: integer
+      password_change_at:
+        type: string
+      phone_number:
+        type: string
+      phone_verified:
+        type: boolean
+      role:
+        $ref: '#/definitions/db.Role'
+      status:
+        $ref: '#/definitions/db.UserStatus'
+    type: object
+  db.UserStatus:
+    enum:
+    - ACTIVE
+    - NON-ACTIVE
+    type: string
+    x-enum-varnames:
+    - UserStatusACTIVE
+    - UserStatusNONACTIVE
   db.VehicleType:
     enum:
     - BUS
@@ -282,6 +395,63 @@ paths:
       summary: Cancel a reservation
       tags:
       - Reservation
+  /profile:
+    get:
+      description: Get the profile of the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.GetUserProfileRow'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get user profile
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      description: Update user profile details including name, contact info, password,
+        and profile picture
+      parameters:
+      - description: Profile update payload
+        in: body
+        name: updateProfileRequest
+        required: true
+        schema:
+          $ref: '#/definitions/api.updateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.updateProfileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update user profile
+      tags:
+      - Users
   /ticket-penalties/{ticket_id}:
     get:
       consumes:

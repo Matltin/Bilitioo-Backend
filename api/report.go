@@ -9,6 +9,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+// getReports godoc
+//
+//	@Summary		Get all reports
+//	@Description	Get all reports from the database
+//	@Tags			reports
+//	@Produce		json
+//	@Success		200	{array}		db.Report
+//	@Failure		404	{object}	map[string]string
+//	@Failure		500	{object}	map[string]string
+//	@Router			/reports [get]
 func (server *Server) getReports(ctx *gin.Context) {
 	reports, err := server.Queries.GetReports(ctx)
 	if err != nil {
@@ -28,6 +38,18 @@ type answerReportRequest struct {
 	ResponseText string `json:"response_text"`
 }
 
+// answerReport godoc
+//
+//	@Summary		Answer a report
+//	@Description	Admin answers a user report
+//	@Tags			reports
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		answerReportRequest	true	"Report answer"
+//	@Success		200		{object}	db.Report
+//	@Failure		400		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/reports/answer [post]
 func (server *Server) answerReport(ctx *gin.Context) {
 	var req answerReportRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -57,6 +79,19 @@ type updateTicketByReportRequest struct {
 	ToStatusReservation string `json:"to_status_reservation"`
 }
 
+// updateTicketByReport godoc
+//
+//	@Summary		Update ticket by report
+//	@Description	Admin updates a ticket status based on a report
+//	@Tags			reports
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		updateTicketByReportRequest	true	"Ticket update"
+//	@Success		200		{object}	map[string]string
+//	@Failure		400		{object}	map[string]string
+//	@Failure		404		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/reports/ticket [put]
 func (server *Server) updateTicketByReport(ctx *gin.Context) {
 	var req updateTicketByReportRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -224,6 +259,18 @@ type createReportRequest struct {
 	ReservationID int64  `json:"reservation_id"`
 }
 
+// createReport godoc
+//
+//	@Summary		Create a report
+//	@Description	User creates a new report
+//	@Tags			reports
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		createReportRequest	true	"Report creation"
+//	@Success		200		{object}	db.Report
+//	@Failure		400		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/reports [post]
 func (server *Server) createReport(ctx *gin.Context) {
 	var req createReportRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {

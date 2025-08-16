@@ -191,6 +191,95 @@ const docTemplate = `{
                 }
             }
         },
+        "/profile": {
+            "get": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Get the profile of the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Get user profile",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.GetUserProfileRow"
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "put": {
+                "security": [
+                    {
+                        "ApiKeyAuth": []
+                    }
+                ],
+                "description": "Update user profile details including name, contact info, password, and profile picture",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "Users"
+                ],
+                "summary": "Update user profile",
+                "parameters": [
+                    {
+                        "description": "Profile update payload",
+                        "name": "updateProfileRequest",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.updateProfileRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/api.updateProfileResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/ticket-penalties/{ticket_id}": {
             "get": {
                 "security": [
@@ -470,6 +559,46 @@ const docTemplate = `{
                 }
             }
         },
+        "api.updateProfileRequest": {
+            "type": "object",
+            "properties": {
+                "city_id": {
+                    "type": "integer"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "national_code": {
+                    "type": "string"
+                },
+                "password": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "pic_dir": {
+                    "type": "string"
+                }
+            }
+        },
+        "api.updateProfileResponse": {
+            "type": "object",
+            "properties": {
+                "profile": {
+                    "$ref": "#/definitions/db.Profile"
+                },
+                "user": {
+                    "$ref": "#/definitions/db.User"
+                }
+            }
+        },
         "db.ChangeReservation": {
             "type": "object",
             "properties": {
@@ -504,6 +633,53 @@ const docTemplate = `{
                 "CheckReservationTicketStatusNOTRESERVED"
             ]
         },
+        "db.GetUserProfileRow": {
+            "type": "object",
+            "properties": {
+                "city_id": {
+                    "type": "integer"
+                },
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "email_verified": {
+                    "type": "boolean"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "national_code": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "phone_verified": {
+                    "type": "boolean"
+                },
+                "pic_dir": {
+                    "type": "string"
+                },
+                "role": {
+                    "$ref": "#/definitions/db.Role"
+                },
+                "status": {
+                    "$ref": "#/definitions/db.UserStatus"
+                },
+                "user_id": {
+                    "type": "integer"
+                },
+                "wallet": {
+                    "type": "integer"
+                }
+            }
+        },
         "db.Penalty": {
             "type": "object",
             "properties": {
@@ -523,6 +699,43 @@ const docTemplate = `{
                     "type": "integer"
                 }
             }
+        },
+        "db.Profile": {
+            "type": "object",
+            "properties": {
+                "city_id": {
+                    "type": "integer"
+                },
+                "first_name": {
+                    "type": "string"
+                },
+                "last_name": {
+                    "type": "string"
+                },
+                "national_code": {
+                    "type": "string"
+                },
+                "pic_dir": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                },
+                "wallet": {
+                    "type": "integer"
+                }
+            }
+        },
+        "db.Role": {
+            "type": "string",
+            "enum": [
+                "ADMIN",
+                "USER"
+            ],
+            "x-enum-varnames": [
+                "RoleADMIN",
+                "RoleUSER"
+            ]
         },
         "db.SearchTicketsByCitiesRow": {
             "type": "object",
@@ -587,6 +800,52 @@ const docTemplate = `{
                 "TicketStatusRESERVING",
                 "TicketStatusCANCELED",
                 "TicketStatusCANCELEDBYTIME"
+            ]
+        },
+        "db.User": {
+            "type": "object",
+            "properties": {
+                "created_at": {
+                    "type": "string"
+                },
+                "email": {
+                    "type": "string"
+                },
+                "email_verified": {
+                    "type": "boolean"
+                },
+                "hashed_password": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "password_change_at": {
+                    "type": "string"
+                },
+                "phone_number": {
+                    "type": "string"
+                },
+                "phone_verified": {
+                    "type": "boolean"
+                },
+                "role": {
+                    "$ref": "#/definitions/db.Role"
+                },
+                "status": {
+                    "$ref": "#/definitions/db.UserStatus"
+                }
+            }
+        },
+        "db.UserStatus": {
+            "type": "string",
+            "enum": [
+                "ACTIVE",
+                "NON-ACTIVE"
+            ],
+            "x-enum-varnames": [
+                "UserStatusACTIVE",
+                "UserStatusNONACTIVE"
             ]
         },
         "db.VehicleType": {
