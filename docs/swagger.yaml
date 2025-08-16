@@ -43,6 +43,22 @@ definitions:
     required:
     - tickets
     type: object
+  api.logInUserRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      phone_number:
+        type: string
+    type: object
+  api.logInUserResponse:
+    properties:
+      access_token:
+        type: string
+      user:
+        $ref: '#/definitions/db.GetUserRow'
+    type: object
   api.payPaymentRequest:
     properties:
       payment_id:
@@ -113,6 +129,18 @@ definitions:
     - destination_city_id
     - origin_city_id
     - vehicle_type
+    type: object
+  api.signUpUserRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      phone_number:
+        type: string
+    required:
+    - password
     type: object
   api.updateProfileRequest:
     properties:
@@ -222,6 +250,21 @@ definitions:
         type: integer
       wallet:
         type: integer
+    type: object
+  db.GetUserRow:
+    properties:
+      email:
+        type: string
+      email_verified:
+        type: boolean
+      hashed_password:
+        type: string
+      id:
+        type: integer
+      phone_number:
+        type: string
+      phone_verified:
+        type: boolean
     type: object
   db.Penalty:
     properties:
@@ -415,6 +458,97 @@ info:
   title: Bilitio API
   version: "1.0"
 paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login user using email or phone number. Returns an access token.
+      parameters:
+      - description: Login request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.logInUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.logInUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Log in a user
+      tags:
+      - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user using email or phone number. Sends a verification
+        email after signup.
+      parameters:
+      - description: Signup request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.signUpUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "429":
+          description: Too Many Requests
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register a new user
+      tags:
+      - Auth
   /city:
     get:
       consumes:

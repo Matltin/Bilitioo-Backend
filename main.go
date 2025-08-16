@@ -35,9 +35,9 @@ import (
 //	@BasePath	/
 //	@schemes	http
 
-// @securityDefinitions.apikey	BearerAuth
-// @in							header
-// @name						Authorization
+//	@securityDefinitions.apikey	BearerAuth
+//	@in							header
+//	@name						Authorization
 func main() {
 	// 1. config
 	config, err := util.LoadConfig(".")
