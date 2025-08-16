@@ -20,6 +20,25 @@ type createReservationRequest struct {
 	Tickets []int64 `json:"tickets" binding:"required"`
 }
 
+type createReservationResponse struct {
+	Reservatoin []db.CreateReservationRow
+	Payment     db.Payment
+}
+
+// createReservation godoc
+//
+//	@Summary		Create a reservation
+//	@Description	Creates reservations for selected tickets and generates a payment record
+//	@Tags			reservations
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		createReservationRequest	true	"Reservation request"
+//	@Success		200		{object}	map[string]interface{}		"Reservations and payment"
+//	@Failure		400		{object}	map[string]string
+//	@Failure		403		{object}	map[string]string
+//	@Failure		404		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/reservations [post]
 func (server *Server) createReservation(ctx *gin.Context) {
 	var req createReservationRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -98,12 +117,22 @@ func (server *Server) createReservation(ctx *gin.Context) {
 		reservations = append(reservations, reservation)
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{
-		"reservations": reservations,
-		"payment":      payment,
+	ctx.JSON(http.StatusOK, createReservationResponse{
+		Reservatoin: reservations,
+		Payment:     payment,
 	})
 }
 
+// getAllUserReservation godoc
+//
+//	@Summary		Get all user reservations
+//	@Description	Retrieves all reservations of the authenticated user
+//	@Tags			reservations
+//	@Produce		json
+//	@Success		200	{array}		db.GetAllUserReservationRow
+//	@Failure		404	{object}	map[string]string
+//	@Failure		500	{object}	map[string]string
+//	@Router			/reservations/user [get]
 func (server *Server) getAllUserReservation(ctx *gin.Context) {
 	authPayload := ctx.MustGet(authorizationPyloadKey).(*token.Payload)
 	reservations, err := server.Queries.GetAllUserReservation(ctx, authPayload.UserID)
@@ -118,6 +147,16 @@ func (server *Server) getAllUserReservation(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, reservations)
 }
 
+// getCompletedUserReservation godoc
+//
+//	@Summary		Get completed user reservations
+//	@Description	Retrieves all completed reservations of the authenticated user
+//	@Tags			reservations
+//	@Produce		json
+//	@Success		200	{array}		db.GetCompletedUserReservationRow
+//	@Failure		404	{object}	map[string]string
+//	@Failure		500	{object}	map[string]string
+//	@Router			/reservations/user/completed [get]
 func (server *Server) getCompletedUserReservation(ctx *gin.Context) {
 	authPayload := ctx.MustGet(authorizationPyloadKey).(*token.Payload)
 	reservations, err := server.Queries.GetCompletedUserReservation(ctx, authPayload.UserID)

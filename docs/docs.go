@@ -280,6 +280,366 @@ const docTemplate = `{
                 }
             }
         },
+        "/reports": {
+            "get": {
+                "description": "Get all reports from the database",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reports"
+                ],
+                "summary": "Get all reports",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.Report"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "description": "User creates a new report",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reports"
+                ],
+                "summary": "Create a report",
+                "parameters": [
+                    {
+                        "description": "Report creation",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.createReportRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.Report"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/answer": {
+            "post": {
+                "description": "Admin answers a user report",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reports"
+                ],
+                "summary": "Answer a report",
+                "parameters": [
+                    {
+                        "description": "Report answer",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.answerReportRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "$ref": "#/definitions/db.Report"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reports/ticket": {
+            "put": {
+                "description": "Admin updates a ticket status based on a report",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reports"
+                ],
+                "summary": "Update ticket by report",
+                "parameters": [
+                    {
+                        "description": "Ticket update",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.updateTicketByReportRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reservations": {
+            "post": {
+                "description": "Creates reservations for selected tickets and generates a payment record",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reservations"
+                ],
+                "summary": "Create a reservation",
+                "parameters": [
+                    {
+                        "description": "Reservation request",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/api.createReservationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Reservations and payment",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": true
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Forbidden",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reservations/user": {
+            "get": {
+                "description": "Retrieves all reservations of the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reservations"
+                ],
+                "summary": "Get all user reservations",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.GetAllUserReservationRow"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/reservations/user/completed": {
+            "get": {
+                "description": "Retrieves all completed reservations of the authenticated user",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "reservations"
+                ],
+                "summary": "Get completed user reservations",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/db.GetCompletedUserReservationRow"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Not Found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/ticket-penalties/{ticket_id}": {
             "get": {
                 "security": [
@@ -473,6 +833,17 @@ const docTemplate = `{
                 }
             }
         },
+        "api.answerReportRequest": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "response_text": {
+                    "type": "string"
+                }
+            }
+        },
         "api.cancelReservationResponse": {
             "type": "object",
             "properties": {
@@ -487,6 +858,34 @@ const docTemplate = `{
                 },
                 "ticket_id": {
                     "type": "integer"
+                }
+            }
+        },
+        "api.createReportRequest": {
+            "type": "object",
+            "properties": {
+                "request_text": {
+                    "type": "string"
+                },
+                "request_type": {
+                    "type": "string"
+                },
+                "reservation_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "api.createReservationRequest": {
+            "type": "object",
+            "required": [
+                "tickets"
+            ],
+            "properties": {
+                "tickets": {
+                    "type": "array",
+                    "items": {
+                        "type": "integer"
+                    }
                 }
             }
         },
@@ -599,6 +998,17 @@ const docTemplate = `{
                 }
             }
         },
+        "api.updateTicketByReportRequest": {
+            "type": "object",
+            "properties": {
+                "reserevation_id": {
+                    "type": "integer"
+                },
+                "to_status_reservation": {
+                    "type": "string"
+                }
+            }
+        },
         "db.ChangeReservation": {
             "type": "object",
             "properties": {
@@ -632,6 +1042,40 @@ const docTemplate = `{
                 "CheckReservationTicketStatusRESERVED",
                 "CheckReservationTicketStatusNOTRESERVED"
             ]
+        },
+        "db.GetAllUserReservationRow": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "id_2": {
+                    "type": "integer"
+                },
+                "province": {
+                    "type": "string"
+                },
+                "province_2": {
+                    "type": "string"
+                }
+            }
+        },
+        "db.GetCompletedUserReservationRow": {
+            "type": "object",
+            "properties": {
+                "province": {
+                    "type": "string"
+                },
+                "province_2": {
+                    "type": "string"
+                },
+                "reservation_id": {
+                    "type": "integer"
+                },
+                "ticket_id": {
+                    "type": "integer"
+                }
+            }
         },
         "db.GetUserProfileRow": {
             "type": "object",
@@ -725,6 +1169,47 @@ const docTemplate = `{
                     "type": "integer"
                 }
             }
+        },
+        "db.Report": {
+            "type": "object",
+            "properties": {
+                "admin_id": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "request_text": {
+                    "type": "string"
+                },
+                "request_type": {
+                    "$ref": "#/definitions/db.RequestType"
+                },
+                "reservation_id": {
+                    "type": "integer"
+                },
+                "response_text": {
+                    "type": "string"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "db.RequestType": {
+            "type": "string",
+            "enum": [
+                "PAYMENT-ISSUE",
+                "TRAVEL-DELAY",
+                "UNEXPECTED-RESERVED",
+                "ETC."
+            ],
+            "x-enum-varnames": [
+                "RequestTypePAYMENTISSUE",
+                "RequestTypeTRAVELDELAY",
+                "RequestTypeUNEXPECTEDRESERVED",
+                "RequestTypeETC"
+            ]
         },
         "db.Role": {
             "type": "string",

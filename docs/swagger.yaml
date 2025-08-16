@@ -7,6 +7,13 @@ definitions:
       province:
         type: string
     type: object
+  api.answerReportRequest:
+    properties:
+      id:
+        type: integer
+      response_text:
+        type: string
+    type: object
   api.cancelReservationResponse:
     properties:
       amount_refunded:
@@ -17,6 +24,24 @@ definitions:
         type: string
       ticket_id:
         type: integer
+    type: object
+  api.createReportRequest:
+    properties:
+      request_text:
+        type: string
+      request_type:
+        type: string
+      reservation_id:
+        type: integer
+    type: object
+  api.createReservationRequest:
+    properties:
+      tickets:
+        items:
+          type: integer
+        type: array
+    required:
+    - tickets
     type: object
   api.payPaymentRequest:
     properties:
@@ -95,6 +120,13 @@ definitions:
       user:
         $ref: '#/definitions/db.User'
     type: object
+  api.updateTicketByReportRequest:
+    properties:
+      reserevation_id:
+        type: integer
+      to_status_reservation:
+        type: string
+    type: object
   db.ChangeReservation:
     properties:
       admin_id:
@@ -118,6 +150,28 @@ definitions:
     x-enum-varnames:
     - CheckReservationTicketStatusRESERVED
     - CheckReservationTicketStatusNOTRESERVED
+  db.GetAllUserReservationRow:
+    properties:
+      id:
+        type: integer
+      id_2:
+        type: integer
+      province:
+        type: string
+      province_2:
+        type: string
+    type: object
+  db.GetCompletedUserReservationRow:
+    properties:
+      province:
+        type: string
+      province_2:
+        type: string
+      reservation_id:
+        type: integer
+      ticket_id:
+        type: integer
+    type: object
   db.GetUserProfileRow:
     properties:
       city_id:
@@ -179,6 +233,35 @@ definitions:
       wallet:
         type: integer
     type: object
+  db.Report:
+    properties:
+      admin_id:
+        type: integer
+      id:
+        type: integer
+      request_text:
+        type: string
+      request_type:
+        $ref: '#/definitions/db.RequestType'
+      reservation_id:
+        type: integer
+      response_text:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  db.RequestType:
+    enum:
+    - PAYMENT-ISSUE
+    - TRAVEL-DELAY
+    - UNEXPECTED-RESERVED
+    - ETC.
+    type: string
+    x-enum-varnames:
+    - RequestTypePAYMENTISSUE
+    - RequestTypeTRAVELDELAY
+    - RequestTypeUNEXPECTEDRESERVED
+    - RequestTypeETC
   db.Role:
     enum:
     - ADMIN
@@ -452,6 +535,244 @@ paths:
       summary: Update user profile
       tags:
       - Users
+  /reports:
+    get:
+      description: Get all reports from the database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.Report'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all reports
+      tags:
+      - reports
+    post:
+      consumes:
+      - application/json
+      description: User creates a new report
+      parameters:
+      - description: Report creation
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.createReportRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.Report'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a report
+      tags:
+      - reports
+  /reports/answer:
+    post:
+      consumes:
+      - application/json
+      description: Admin answers a user report
+      parameters:
+      - description: Report answer
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.answerReportRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.Report'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Answer a report
+      tags:
+      - reports
+  /reports/ticket:
+    put:
+      consumes:
+      - application/json
+      description: Admin updates a ticket status based on a report
+      parameters:
+      - description: Ticket update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.updateTicketByReportRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update ticket by report
+      tags:
+      - reports
+  /reservations:
+    post:
+      consumes:
+      - application/json
+      description: Creates reservations for selected tickets and generates a payment
+        record
+      parameters:
+      - description: Reservation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.createReservationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reservations and payment
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a reservation
+      tags:
+      - reservations
+  /reservations/user:
+    get:
+      description: Retrieves all reservations of the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.GetAllUserReservationRow'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all user reservations
+      tags:
+      - reservations
+  /reservations/user/completed:
+    get:
+      description: Retrieves all completed reservations of the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.GetCompletedUserReservationRow'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get completed user reservations
+      tags:
+      - reservations
   /ticket-penalties/{ticket_id}:
     get:
       consumes:
