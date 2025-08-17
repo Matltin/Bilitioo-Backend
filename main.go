@@ -35,9 +35,9 @@ import (
 //	@BasePath	/
 //	@schemes	http
 
-//	@securityDefinitions.apikey	BearerAuth
-//	@in							header
-//	@name						Authorization
+// @securityDefinitions.apikey	BearerAuth
+// @in							header
+// @name						Authorization
 func main() {
 	// 1. config
 	config, err := util.LoadConfig(".")
@@ -60,8 +60,8 @@ func main() {
 	taskDistributor := worker.NewRedisTaskDistributor(redisOpt)
 
 	// 4. set worker
-	// go runTaskProcessor(config, redisOpt, Queries)
-	// go runScheduler(redisOpt, taskDistributor)
+	go runTaskProcessor(config, redisOpt, Queries)
+	go runScheduler(redisOpt, taskDistributor)
 
 	redis := db_redis.NewRedisClient(config.RedisAddress)
 
