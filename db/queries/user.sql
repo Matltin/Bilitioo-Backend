@@ -11,7 +11,7 @@ INSERT INTO "user" (
 
 -- name: GetUser :one
 SELECT 
-    "id", "email", "phone_number", "hashed_password", "email_verified", "phone_verified"
+    "id", "email", "phone_number", "hashed_password", "email_verified", "phone_verified", "role"
 FROM "user"
 WHERE "email" = $1 OR "phone_number" = $2;
 
@@ -24,7 +24,7 @@ INSERT INTO "profile" (
 
 -- name: GetUserByID :one
 SELECT 
-    "id", "email", "phone_number", "hashed_password"
+    "id", "email", "phone_number", "hashed_password", "role"
 FROM "user"
 WHERE "id" = $1;
 

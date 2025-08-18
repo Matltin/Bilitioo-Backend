@@ -56,7 +56,7 @@ func (q *Queries) CreateUser(ctx context.Context, arg CreateUserParams) (User, e
 
 const getUser = `-- name: GetUser :one
 SELECT 
-    "id", "email", "phone_number", "hashed_password", "email_verified", "phone_verified"
+    "id", "email", "phone_number", "hashed_password", "email_verified", "phone_verified", "role"
 FROM "user"
 WHERE "email" = $1 OR "phone_number" = $2
 `
@@ -73,6 +73,7 @@ type GetUserRow struct {
 	HashedPassword string `json:"hashed_password"`
 	EmailVerified  bool   `json:"email_verified"`
 	PhoneVerified  bool   `json:"phone_verified"`
+	Role           Role   `json:"role"`
 }
 
 func (q *Queries) GetUser(ctx context.Context, arg GetUserParams) (GetUserRow, error) {
@@ -85,13 +86,14 @@ func (q *Queries) GetUser(ctx context.Context, arg GetUserParams) (GetUserRow, e
 		&i.HashedPassword,
 		&i.EmailVerified,
 		&i.PhoneVerified,
+		&i.Role,
 	)
 	return i, err
 }
 
 const getUserByID = `-- name: GetUserByID :one
 SELECT 
-    "id", "email", "phone_number", "hashed_password"
+    "id", "email", "phone_number", "hashed_password", "role"
 FROM "user"
 WHERE "id" = $1
 `
@@ -101,6 +103,7 @@ type GetUserByIDRow struct {
 	Email          string `json:"email"`
 	PhoneNumber    string `json:"phone_number"`
 	HashedPassword string `json:"hashed_password"`
+	Role           Role   `json:"role"`
 }
 
 func (q *Queries) GetUserByID(ctx context.Context, id int64) (GetUserByIDRow, error) {
@@ -111,6 +114,7 @@ func (q *Queries) GetUserByID(ctx context.Context, id int64) (GetUserByIDRow, er
 		&i.Email,
 		&i.PhoneNumber,
 		&i.HashedPassword,
+		&i.Role,
 	)
 	return i, err
 }

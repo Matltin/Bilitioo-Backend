@@ -7,6 +7,7 @@ package db
 
 import (
 	"context"
+	"database/sql"
 )
 
 const answerReport = `-- name: AnswerReport :one
@@ -41,11 +42,11 @@ func (q *Queries) AnswerReport(ctx context.Context, arg AnswerReportParams) (Rep
 
 const createReport = `-- name: CreateReport :one
 INSERT INTO "report" (
-    "reservation_id",
-    "user_id",
-    "request_type",
-    "request_text",
-    "response_text"
+    reservation_id,
+    user_id,
+    request_type,
+    request_text,
+    response_text
 )
 VALUES (
     $1, $2, $3, $4, $5
@@ -102,6 +103,283 @@ func (q *Queries) GetReports(ctx context.Context) ([]Report, error) {
 			&i.RequestType,
 			&i.RequestText,
 			&i.ResponseText,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUserReport = `-- name: GetUserReport :many
+SELECT 
+    r.id,
+    r.user_id,
+    r.reservation_id,
+    r.request_type,
+    r.request_text,
+    r.response_text,
+    r.admin_id,
+    res.ticket_id,
+    res.status AS reservation_status,
+    t.departure_time,
+    t.arrival_time,
+    t.amount AS ticket_amount,
+    t.vehicle_type,
+    rt.origin_city_id,
+    rt.destination_city_id,
+    oc.province AS origin_city_name,
+    dc.province AS destination_city_name
+FROM "report" r
+LEFT JOIN reservation res ON r.reservation_id = res.id
+LEFT JOIN ticket t ON res.ticket_id = t.id
+LEFT JOIN route rt ON t.route_id = rt.id
+LEFT JOIN city oc ON rt.origin_city_id = oc.id
+LEFT JOIN city dc ON rt.destination_city_id = dc.id
+WHERE r.user_id = $1
+ORDER BY r.id DESC
+`
+
+type GetUserReportRow struct {
+	ID                  int64            `json:"id"`
+	UserID              int64            `json:"user_id"`
+	ReservationID       int64            `json:"reservation_id"`
+	RequestType         RequestType      `json:"request_type"`
+	RequestText         string           `json:"request_text"`
+	ResponseText        string           `json:"response_text"`
+	AdminID             int64            `json:"admin_id"`
+	TicketID            sql.NullInt64    `json:"ticket_id"`
+	ReservationStatus   NullTicketStatus `json:"reservation_status"`
+	DepartureTime       sql.NullTime     `json:"departure_time"`
+	ArrivalTime         sql.NullTime     `json:"arrival_time"`
+	TicketAmount        sql.NullInt64    `json:"ticket_amount"`
+	VehicleType         NullVehicleType  `json:"vehicle_type"`
+	OriginCityID        sql.NullInt64    `json:"origin_city_id"`
+	DestinationCityID   sql.NullInt64    `json:"destination_city_id"`
+	OriginCityName      sql.NullString   `json:"origin_city_name"`
+	DestinationCityName sql.NullString   `json:"destination_city_name"`
+}
+
+func (q *Queries) GetUserReport(ctx context.Context, userID int64) ([]GetUserReportRow, error) {
+	rows, err := q.db.QueryContext(ctx, getUserReport, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetUserReportRow{}
+	for rows.Next() {
+		var i GetUserReportRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.ReservationID,
+			&i.RequestType,
+			&i.RequestText,
+			&i.ResponseText,
+			&i.AdminID,
+			&i.TicketID,
+			&i.ReservationStatus,
+			&i.DepartureTime,
+			&i.ArrivalTime,
+			&i.TicketAmount,
+			&i.VehicleType,
+			&i.OriginCityID,
+			&i.DestinationCityID,
+			&i.OriginCityName,
+			&i.DestinationCityName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUserReportByStatus = `-- name: GetUserReportByStatus :many
+SELECT 
+    r.id,
+    r.user_id,
+    r.reservation_id,
+    r.request_type,
+    r.request_text,
+    r.response_text,
+    r.admin_id,
+    CASE 
+        WHEN r.response_text IS NULL OR r.response_text = '' THEN 'PENDING'
+        ELSE 'ANSWERED'
+    END as status
+FROM "report" r
+WHERE r.user_id = $1
+  AND (
+        ($2::text = 'PENDING' AND (r.response_text IS NULL OR r.response_text = ''))
+     OR ($2::text = 'ANSWERED' AND (r.response_text IS NOT NULL AND r.response_text != ''))
+     OR ($2::text NOT IN ('PENDING','ANSWERED'))
+  )
+ORDER BY r.id DESC
+`
+
+type GetUserReportByStatusParams struct {
+	UserID  int64  `json:"user_id"`
+	Column2 string `json:"column_2"`
+}
+
+type GetUserReportByStatusRow struct {
+	ID            int64       `json:"id"`
+	UserID        int64       `json:"user_id"`
+	ReservationID int64       `json:"reservation_id"`
+	RequestType   RequestType `json:"request_type"`
+	RequestText   string      `json:"request_text"`
+	ResponseText  string      `json:"response_text"`
+	AdminID       int64       `json:"admin_id"`
+	Status        string      `json:"status"`
+}
+
+func (q *Queries) GetUserReportByStatus(ctx context.Context, arg GetUserReportByStatusParams) ([]GetUserReportByStatusRow, error) {
+	rows, err := q.db.QueryContext(ctx, getUserReportByStatus, arg.UserID, arg.Column2)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetUserReportByStatusRow{}
+	for rows.Next() {
+		var i GetUserReportByStatusRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.ReservationID,
+			&i.RequestType,
+			&i.RequestText,
+			&i.ResponseText,
+			&i.AdminID,
+			&i.Status,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUserReportByType = `-- name: GetUserReportByType :many
+SELECT 
+    id,
+    user_id,
+    reservation_id,
+    request_type,
+    request_text,
+    response_text,
+    admin_id
+FROM "report" 
+WHERE user_id = $1 
+  AND request_type = $2
+ORDER BY id DESC
+`
+
+type GetUserReportByTypeParams struct {
+	UserID      int64       `json:"user_id"`
+	RequestType RequestType `json:"request_type"`
+}
+
+type GetUserReportByTypeRow struct {
+	ID            int64       `json:"id"`
+	UserID        int64       `json:"user_id"`
+	ReservationID int64       `json:"reservation_id"`
+	RequestType   RequestType `json:"request_type"`
+	RequestText   string      `json:"request_text"`
+	ResponseText  string      `json:"response_text"`
+	AdminID       int64       `json:"admin_id"`
+}
+
+func (q *Queries) GetUserReportByType(ctx context.Context, arg GetUserReportByTypeParams) ([]GetUserReportByTypeRow, error) {
+	rows, err := q.db.QueryContext(ctx, getUserReportByType, arg.UserID, arg.RequestType)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetUserReportByTypeRow{}
+	for rows.Next() {
+		var i GetUserReportByTypeRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.ReservationID,
+			&i.RequestType,
+			&i.RequestText,
+			&i.ResponseText,
+			&i.AdminID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUserReportSimple = `-- name: GetUserReportSimple :many
+SELECT 
+    id,
+    user_id,
+    reservation_id,
+    request_type,
+    request_text,
+    response_text,
+    admin_id
+FROM "report" 
+WHERE user_id = $1
+ORDER BY id DESC
+`
+
+type GetUserReportSimpleRow struct {
+	ID            int64       `json:"id"`
+	UserID        int64       `json:"user_id"`
+	ReservationID int64       `json:"reservation_id"`
+	RequestType   RequestType `json:"request_type"`
+	RequestText   string      `json:"request_text"`
+	ResponseText  string      `json:"response_text"`
+	AdminID       int64       `json:"admin_id"`
+}
+
+func (q *Queries) GetUserReportSimple(ctx context.Context, userID int64) ([]GetUserReportSimpleRow, error) {
+	rows, err := q.db.QueryContext(ctx, getUserReportSimple, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetUserReportSimpleRow{}
+	for rows.Next() {
+		var i GetUserReportSimpleRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.UserID,
+			&i.ReservationID,
+			&i.RequestType,
+			&i.RequestText,
+			&i.ResponseText,
+			&i.AdminID,
 		); err != nil {
 			return nil, err
 		}
