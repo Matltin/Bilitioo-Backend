@@ -66,40 +66,50 @@ func (ser *Server) setupRouter() {
 	router.Use(cors.New(config))
 
 	swaggerUrl := ginSwagger.URL("http://localhost:3000/swagger/doc.json")
-
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, swaggerUrl))
 
 	// Public routes (no authentication required)
-	router.POST("/sign-in", ser.registerUserRedis) //1
-	router.POST("/log-in", ser.loginUserRedis)     //2
+	router.POST("/sign-in", ser.registerUserRedis)
+	router.POST("/log-in", ser.loginUserRedis)
 	router.GET("/verify-email", ser.verifyEmail)
 
 	// Protected routes (authentication required)
 	authRoutes := router.Group("/").Use(authMiddleware(ser.tokenMaker))
+	{
+		// User routes
+		authRoutes.PUT("/profile", ser.updateProfile)
+		authRoutes.GET("/profile", ser.getUserProfile)
+		authRoutes.GET("/city", ser.getCities)
+		authRoutes.POST("/city", ser.searchTicketsByCities)
+		authRoutes.POST("/search-tickets", ser.searchTickets)
+		authRoutes.GET("/ticket-detail/:ticket_id", ser.getTicketDetails)
+		authRoutes.POST("/reservation", ser.createReservation)
+		authRoutes.GET("/completedReservation", ser.getCompletedUserReservation)
+		authRoutes.GET("/allReservation", ser.getAllUserReservation)
+		authRoutes.POST("/payment", ser.payPayment)
+		authRoutes.GET("/ticket-penalties/:ticket_id", ser.getTicketPenalties)
+		authRoutes.GET("/penalty/:ticket_id", ser.getTicketPenalties)
+		authRoutes.PUT("/penalty/:ticket_id", ser.cancelReservation)
+		authRoutes.GET("/completed-tickets", ser.getAllUserCompletedTickets)
+		authRoutes.GET("/notcompleted-tickets", ser.getAllUserNotCompletedTickets)
+		authRoutes.POST("/report", ser.createReport) // Users can create reports
+	}
 
-	authRoutes.PUT("/profile", ser.updateProfile)                     //3
-	authRoutes.GET("/profile", ser.getUserProfile)                    //3
-	authRoutes.GET("/city", ser.getCities)                            //4
-	authRoutes.POST("/city", ser.searchTicketsByCities)               //4
-	authRoutes.POST("/search-tickets", ser.searchTickets)             //5 - Changed to POST to match frontend
-	authRoutes.GET("/ticket-detail/:ticket_id", ser.getTicketDetails) //6
-	authRoutes.POST("/reservation", ser.createReservation)            //7
-	authRoutes.GET("/completedReservation", ser.getCompletedUserReservation)
-	authRoutes.GET("/allReservation", ser.getAllUserReservation)
-	authRoutes.POST("/payment", ser.payPayment) //8
+	// Admin-only routes (requires both authentication and admin role)
+	adminRoutes := router.Group("/admin").Use(authMiddleware(ser.tokenMaker), ser.adminMiddleware())
+	{
+		adminRoutes.GET("/reports", ser.getReports)                  // Admin only
+		adminRoutes.PUT("/reports/manage", ser.updateTicketByReport) // Admin only
+		adminRoutes.PUT("/reports/answer", ser.answerReport)         // Admin only
+		adminRoutes.GET("/tickets", ser.getAllTickets)               // Admin only
+	}
 
-	authRoutes.GET("/ticket-penalties/:ticket_id", ser.getTicketPenalties) //9
-	authRoutes.GET("/penalty/:ticket_id", ser.getTicketPenalties)          //9
-	authRoutes.PUT("/penalty/:ticket_id", ser.cancelReservation)           //9, 12
-
-	authRoutes.GET("/report", ser.getReports)                  //10
-	authRoutes.PUT("/manage-report", ser.updateTicketByReport) //10
-	authRoutes.PUT("/report", ser.answerReport)                //13
-	authRoutes.POST("/report", ser.createReport)               //13
-
-	authRoutes.GET("/completed-tickets", ser.getAllUserCompletedTickets)       //11
-	authRoutes.GET("/notcompleted-tickets", ser.getAllUserNotCompletedTickets) //11
-	authRoutes.GET("/tickets", ser.getAllTickets)                              //11
+	// Alternative: Mixed routes where some endpoints need admin access
+	mixedRoutes := router.Group("/").Use(authMiddleware(ser.tokenMaker))
+	{
+		// This endpoint can be accessed by both users and admins, but with different responses
+		mixedRoutes.GET("/reports", ser.getReportsWithRoleCheck)
+	}
 
 	ser.router = router
 }

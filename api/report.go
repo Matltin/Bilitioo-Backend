@@ -50,7 +50,7 @@ type answerReportRequest struct {
 //	@Failure		400		{object}	map[string]string
 //	@Failure		500		{object}	map[string]string
 //	@Router			/reports/answer [post]
-func (server *Server) answerReport(ctx *gin.Context) {
+func (server *Server) answerReportB(ctx *gin.Context) {
 	var req answerReportRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))

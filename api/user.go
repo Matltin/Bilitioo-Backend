@@ -320,7 +320,7 @@ func (server *Server) loginUserRedis(ctx *gin.Context) {
 				return
 			}
 
-			accessToken, _, err := server.tokenMaker.CreateToken(user.ID, server.config.AccessTokenDuration)
+			accessToken, _, err := server.tokenMaker.CreateToken(user.ID, string(user.Role),server.config.AccessTokenDuration)
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 				return
@@ -375,7 +375,7 @@ func (server *Server) loginUserRedis(ctx *gin.Context) {
 		server.redisClient.Set(ctx, cacheKey, string(userJSON), 5*time.Minute)
 	}
 
-	accessToken, _, err := server.tokenMaker.CreateToken(user.ID, server.config.AccessTokenDuration)
+	accessToken, _, err := server.tokenMaker.CreateToken(user.ID, string(user.Role), server.config.AccessTokenDuration)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
