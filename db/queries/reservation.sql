@@ -47,7 +47,7 @@ SELECT
     t.status
 FROM "ticket" t
 INNER JOIN "reservation" r ON r.ticket_id = t.id 
-WHERE t.id = $1;
+WHERE r.id = $1;
 
 -- name: CancelReservation :exec
 UPDATE "ticket"
@@ -69,17 +69,21 @@ INNER JOIN "city" dc ON dc.id = ro.destination_city_id
 WHERE re.status = 'RESERVED' AND re.user_id = $1;
 
 -- name: GetAllUserReservation :many
-SELECT 
+SELECT
     re.id,
-    t.id,
-    oc.province,
-    dc.province
-FROM "reservation" re 
+    t.id as ticket_id,
+    oc.province as origin_province,
+    dc.province as destination_province,
+    re.status,
+    re.payment_id,
+    p.amount
+FROM "reservation" re
 INNER JOIN "ticket" t ON re.ticket_id = t.id
 INNER JOIN "route" ro ON t.route_id = ro.id
 INNER JOIN "city" oc ON oc.id = ro.origin_city_id
 INNER JOIN "city" dc ON dc.id = ro.destination_city_id
-WHERE re.status != 'RESERVED' AND re.user_id = $1;
+INNER JOIN "payment" p ON re.payment_id = p.id -- Join with payment table
+WHERE re.user_id = $1;
 
 -- name: MarkExpiredReservations :exec
 UPDATE reservation
