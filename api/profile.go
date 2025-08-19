@@ -336,6 +336,8 @@ func (server *Server) cacheUserData(ctx *gin.Context, user db.User) error {
 //	@Failure		500	{object}	map[string]string
 //	@Security		ApiKeyAuth
 //	@Router			/profile [get]
+// api/profile.go
+
 func (server *Server) getUserProfile(ctx *gin.Context) {
 	authPayload := ctx.MustGet(authorizationPyloadKey).(*token.Payload)
 
@@ -343,7 +345,8 @@ func (server *Server) getUserProfile(ctx *gin.Context) {
 	cacheKey := fmt.Sprintf("profile:%d", authPayload.UserID)
 	cachedProfile, err := server.redisClient.Get(ctx, cacheKey)
 	if err == nil {
-		var profile db.Profile
+		// THE FIX IS HERE: Use the correct struct `db.GetUserProfileRow`
+		var profile db.GetUserProfileRow 
 		if err := json.Unmarshal([]byte(cachedProfile), &profile); err == nil {
 			ctx.JSON(http.StatusOK, profile)
 			return
@@ -353,6 +356,10 @@ func (server *Server) getUserProfile(ctx *gin.Context) {
 	// Cache miss - get from database
 	profile, err := server.Queries.GetUserProfile(ctx, authPayload.UserID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}
