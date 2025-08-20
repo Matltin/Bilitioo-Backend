@@ -13,19 +13,40 @@ import (
 )
 
 const getAllTickets = `-- name: GetAllTickets :many
-SELECT id, vehicle_id, seat_id, vehicle_type, route_id, amount, departure_time, arrival_time, count_stand, status, created_at FROM "ticket"
+SELECT 
+      t.id, t.vehicle_id, t.seat_id, t.vehicle_type, t.route_id, t.amount, t.departure_time, t.arrival_time, t.count_stand, t.status, t.created_at, 
+      ro.origin_city_id AS origin_province_id,
+      ro.destination_city_id AS destination_province_id
+FROM "ticket" t
+INNER JOIN "route" ro ON t.route_id = ro.id
 WHERE status != 'RESERVED'
 `
 
-func (q *Queries) GetAllTickets(ctx context.Context) ([]Ticket, error) {
+type GetAllTicketsRow struct {
+	ID                    int64                        `json:"id"`
+	VehicleID             int64                        `json:"vehicle_id"`
+	SeatID                int64                        `json:"seat_id"`
+	VehicleType           VehicleType                  `json:"vehicle_type"`
+	RouteID               int64                        `json:"route_id"`
+	Amount                int64                        `json:"amount"`
+	DepartureTime         time.Time                    `json:"departure_time"`
+	ArrivalTime           time.Time                    `json:"arrival_time"`
+	CountStand            int32                        `json:"count_stand"`
+	Status                CheckReservationTicketStatus `json:"status"`
+	CreatedAt             time.Time                    `json:"created_at"`
+	OriginProvinceID      int64                        `json:"origin_province_id"`
+	DestinationProvinceID int64                        `json:"destination_province_id"`
+}
+
+func (q *Queries) GetAllTickets(ctx context.Context) ([]GetAllTicketsRow, error) {
 	rows, err := q.db.QueryContext(ctx, getAllTickets)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Ticket{}
+	items := []GetAllTicketsRow{}
 	for rows.Next() {
-		var i Ticket
+		var i GetAllTicketsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.VehicleID,
@@ -38,6 +59,8 @@ func (q *Queries) GetAllTickets(ctx context.Context) ([]Ticket, error) {
 			&i.CountStand,
 			&i.Status,
 			&i.CreatedAt,
+			&i.OriginProvinceID,
+			&i.DestinationProvinceID,
 		); err != nil {
 			return nil, err
 		}
