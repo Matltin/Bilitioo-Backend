@@ -337,7 +337,6 @@ func (server *Server) cacheUserData(ctx *gin.Context, user db.User) error {
 //	@Security		ApiKeyAuth
 //	@Router			/profile [get]
 // api/profile.go
-
 func (server *Server) getUserProfile(ctx *gin.Context) {
 	authPayload := ctx.MustGet(authorizationPyloadKey).(*token.Payload)
 
