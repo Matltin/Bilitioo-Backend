@@ -1,9 +1,11 @@
 package main
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
 	"log"
+	"time"
 
 	"github.com/Matltin/Bilitioo-Backend/api"
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"
@@ -64,10 +66,13 @@ func main() {
 	go runTaskProcessor(config, redisOpt, Queries)
 	go runScheduler(redisOpt, taskDistributor)
 
+	esClient := elasticsearch.NewElasticsearchClient(config)
+	go runElasticsearchIndexer(taskDistributor)
+
 	redis := db_redis.NewRedisClient(config.RedisAddress)
 
 	// 5. setup server
-	server := api.NewServer(config, taskDistributor, Queries, redis)
+	server := api.NewServer(config, taskDistributor, Queries, redis, esClient)
 
 	server.Start(":3000")
 }
@@ -95,5 +100,17 @@ func runScheduler(redisOpt asynq.RedisClientOpt, distributor worker.TaskDistribu
 	fmt.Println("Scheduler started.")
 	if err := scheduler.Run(); err != nil {
 		log.Fatalf("failed to run scheduler: %v", err)
+	}
+}
+
+func runElasticsearchIndexer(distributor worker.TaskDistributor) {
+	ticker := time.NewTicker(1 * time.Minute)
+	defer ticker.Stop()
+
+	for range ticker.C {
+		err := distributor.DistributeTaskIndexTickets(context.Background(), &worker.PayloadIndexTickets{}, asynq.Queue(worker.QueueDefault))
+		if err != nil {
+			log.Printf("failed to distribute task to index tickets: %v", err)
+		}
 	}
 }

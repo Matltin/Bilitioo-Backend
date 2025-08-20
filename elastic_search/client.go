@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/Matltin/Bilitioo-Backend/util"
-	"github.com/elastic/go-elasticsearch/v8"
+	"github.com/elastic/go-elasticsearch"
 )
 
 func NewElasticsearchClient(config util.Config) *elasticsearch.Client {

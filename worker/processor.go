@@ -6,7 +6,7 @@ import (
 
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"
 	"github.com/Matltin/Bilitioo-Backend/mail"
-	"github.com/elastic/go-elasticsearch/v8"
+	"github.com/elastic/go-elasticsearch"
 	"github.com/hibiken/asynq"
 )
 
