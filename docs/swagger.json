@@ -1034,6 +1034,7 @@
                 "parameters": [
                     {
                         "type": "integer",
+                        "format": "int64",
                         "description": "Ticket ID",
                         "name": "ticket_id",
                         "in": "path",
@@ -1433,17 +1434,26 @@
         "db.GetAllUserReservationRow": {
             "type": "object",
             "properties": {
+                "amount": {
+                    "type": "integer"
+                },
+                "destination_province": {
+                    "type": "string"
+                },
                 "id": {
                     "type": "integer"
                 },
-                "id_2": {
+                "origin_province": {
+                    "type": "string"
+                },
+                "payment_id": {
                     "type": "integer"
                 },
-                "province": {
-                    "type": "string"
+                "status": {
+                    "$ref": "#/definitions/db.TicketStatus"
                 },
-                "province_2": {
-                    "type": "string"
+                "ticket_id": {
+                    "type": "integer"
                 }
             }
         },
@@ -1531,6 +1541,9 @@
                 },
                 "phone_verified": {
                     "type": "boolean"
+                },
+                "role": {
+                    "$ref": "#/definitions/db.Role"
                 }
             }
         },
