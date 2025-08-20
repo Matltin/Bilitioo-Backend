@@ -338,6 +338,8 @@ func (server *Server) searchTicketsElastic(ctx *gin.Context) {
 		},
 	}
 
+	// (postgres).ticket  1.api 2.   -> [database elastic ]  -> searchTicketsElastic (result)
+
 	if err := json.NewEncoder(&buf).Encode(query); err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return

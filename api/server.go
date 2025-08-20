@@ -105,6 +105,10 @@ func (ser *Server) setupRouter() {
 		adminRoutes.PUT("/reports/manage", ser.updateTicketByReport) // Admin only
 		adminRoutes.PUT("/reports/answer", ser.answerReport)         // Admin only
 		adminRoutes.GET("/tickets", ser.getAllTickets)               // Admin only
+
+		adminRoutes.GET("/users/:userID/completed-tickets", ser.getCompletedTicketsForUserByAdmin)
+		adminRoutes.GET("/users/:userID/notcompleted-tickets", ser.getNotCompletedTicketsForUserByAdmin)
+
 	}
 
 	// Alternative: Mixed routes where some endpoints need admin access

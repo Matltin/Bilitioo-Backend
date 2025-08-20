@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"net/http"
+	"strconv"
 
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"
 	"github.com/Matltin/Bilitioo-Backend/token"
@@ -95,4 +96,66 @@ func (server *Server) answerReport(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, report)
+}
+
+// getCompletedTicketsForUserByAdmin godoc
+// @Summary      Get a user's completed tickets (Admin)
+// @Description  Admin gets all completed tickets for a specific user by their ID.
+// @Tags         Admin
+// @Produce      json
+// @Param        userID path int true "User ID"
+// @Success      200 {array} db.GetAllUserCompletedTicketsForAdminRow
+// @Failure      400 {object} map[string]string
+// @Failure      404 {object} map[string]string
+// @Failure      500 {object} map[string]string
+// @Router       /admin/users/{userID}/completed-tickets [get]
+func (server *Server) getCompletedTicketsForUserByAdmin(ctx *gin.Context) {
+	userID, err := strconv.ParseInt(ctx.Param("userID"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid user ID")))
+		return
+	}
+
+	tickets, err := server.Queries.GetAllUserCompletedTicketsForAdmin(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(errors.New("no completed tickets found for this user")))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, tickets)
+}
+
+// getNotCompletedTicketsForUserByAdmin godoc
+// @Summary      Get a user's pending tickets (Admin)
+// @Description  Admin gets all pending (not completed) tickets for a specific user by their ID.
+// @Tags         Admin
+// @Produce      json
+// @Param        userID path int true "User ID"
+// @Success      200 {array} db.GetAllUserNotCompletedTicketsForAdminRow
+// @Failure      400 {object} map[string]string
+// @Failure      404 {object} map[string]string
+// @Failure      500 {object} map[string]string
+// @Router       /admin/users/{userID}/notcompleted-tickets [get]
+func (server *Server) getNotCompletedTicketsForUserByAdmin(ctx *gin.Context) {
+	userID, err := strconv.ParseInt(ctx.Param("userID"), 10, 64)
+	if err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(errors.New("invalid user ID")))
+		return
+	}
+
+	tickets, err := server.Queries.GetAllUserNotCompletedTicketsForAdmin(ctx, userID)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(errors.New("no pending tickets found for this user")))
+			return
+		}
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	ctx.JSON(http.StatusOK, tickets)
 }
