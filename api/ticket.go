@@ -1,6 +1,7 @@
 package api
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -308,4 +309,57 @@ func (server *Server) getAllTickets(ctx *gin.Context) {
 		return
 	}
 	ctx.JSON(http.StatusOK, tickets)
+}
+
+func (server *Server) searchTicketsElastic(ctx *gin.Context) {
+	var req searchTicketsRequest
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		ctx.JSON(http.StatusBadRequest, errorResponse(err))
+		return
+	}
+
+	var buf bytes.Buffer
+	query := map[string]interface{}{
+		"query": map[string]interface{}{
+			"bool": map[string]interface{}{
+				"must": []interface{}{
+					map[string]interface{}{"term": map[string]interface{}{"origin_city_id": req.OriginCityID}},
+					map[string]interface{}{"term": map[string]interface{}{"destination_city_id": req.DestinationCityID}},
+					map[string]interface{}{"term": map[string]interface{}{"vehicle_type.keyword": req.VehicleType}},
+					map[string]interface{}{
+						"range": map[string]interface{}{
+							"departure_time": map[string]interface{}{
+								"gte": req.DepartureDate,
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+
+	if err := json.NewEncoder(&buf).Encode(query); err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+
+	res, err := server.elasticClient.Search(
+		server.elasticClient.Search.WithContext(ctx),
+		server.elasticClient.Search.WithIndex("tickets"),
+		server.elasticClient.Search.WithBody(&buf),
+		server.elasticClient.Search.WithTrackTotalHits(true),
+		server.elasticClient.Search.WithPretty(),
+	)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	defer res.Body.Close()
+
+	var r map[string]interface{}
+	if err := json.NewDecoder(res.Body).Decode(&r); err != nil {
+		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
+		return
+	}
+	ctx.JSON(http.StatusOK, r)
 }
