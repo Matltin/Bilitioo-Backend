@@ -18,24 +18,15 @@ const (
 
 func authMiddleware(tokenMaker token.Maker) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		authorizationHeader := ctx.GetHeader(authorizationHeaderKey)
-		if len(authorizationHeader) == 0 {
-			err := errors.New("authorization header is not provided")
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err))
+		authHeader := ctx.GetHeader(authorizationHeaderKey)
+		if len(authHeader) == 0 {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(errors.New("authorization header is not provided")))
 			return
 		}
 
-		fields := strings.Fields(authorizationHeader)
-		if len(fields) < 2 {
-			err := errors.New("invalid authorization header")
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err))
-			return
-		}
-
-		authorizationType := strings.ToLower(fields[0])
-		if authorizationType != authorizationTypeBearer {
-			err := fmt.Errorf("unsupported authorization type %s", authorizationType)
-			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(err))
+		fields := strings.Fields(authHeader)
+		if len(fields) < 2 || strings.ToLower(fields[0]) != authorizationTypeBearer {
+			ctx.AbortWithStatusJSON(http.StatusUnauthorized, errorResponse(errors.New("invalid authorization header")))
 			return
 		}
 
@@ -54,24 +45,19 @@ func authMiddleware(tokenMaker token.Maker) gin.HandlerFunc {
 // adminMiddleware checks if the authenticated user has admin role
 func (server *Server) adminMiddleware() gin.HandlerFunc {
 	return func(ctx *gin.Context) {
-		// Get the auth payload (user must be authenticated first)
-		authPayload := ctx.MustGet(authorizationPyloadKey).(*token.Payload)
+		payload := ctx.MustGet(authorizationPyloadKey).(*token.Payload)
 
-		// Get user details from database
-		user, err := server.Queries.GetUserByID(ctx, authPayload.UserID)
+		user, err := server.Queries.GetUserByID(ctx, payload.UserID)
 		if err != nil {
 			ctx.AbortWithStatusJSON(http.StatusInternalServerError, errorResponse(err))
 			return
 		}
 
-		// Check if user has admin role
 		if user.Role != "ADMIN" {
-			err := errors.New("access denied: admin privileges required")
-			ctx.AbortWithStatusJSON(http.StatusForbidden, errorResponse(err))
+			ctx.AbortWithStatusJSON(http.StatusForbidden, errorResponse(errors.New("access denied: admin privileges required")))
 			return
 		}
 
-		// User is admin, continue to next handler
 		ctx.Next()
 	}
 }

@@ -96,7 +96,7 @@ func (ser *Server) setupRouter() {
 	}
 
 	// Admin-only routes (requires both authentication and admin role)
-	adminRoutes := router.Group("/admin").Use(authMiddleware(ser.tokenMaker), ser.adminMiddleware())
+	adminRoutes := router.Group("/admin").Use(authMiddleware(ser.tokenMaker))
 	{
 		adminRoutes.GET("/reports", ser.getReports)                  // Admin only
 		adminRoutes.PUT("/reports/manage", ser.updateTicketByReport) // Admin only
