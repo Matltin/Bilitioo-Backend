@@ -124,3 +124,33 @@ UPDATE "ticket"
 SET status = $1
 WHERE id = $2
 RETURNING amount;
+
+-- name: GetAllUserCompletedTicketsForAdmin :many
+SELECT 
+  t.id,
+  oc.province,
+  dc.province,
+  re.status,
+  p.status as payment_status
+FROM "reservation" re 
+INNER JOIN "payment" p ON p.id = re.payment_id
+INNER JOIN "ticket" t ON re.ticket_id = t.id
+INNER JOIN "route" ro ON t.route_id = ro.id
+INNER JOIN "city" oc ON oc.id = ro.origin_city_id
+INNER JOIN "city" dc ON dc.id = ro.destination_city_id
+WHERE p.status = 'COMPLETED' AND re.user_id = $1;
+
+-- name: GetAllUserNotCompletedTicketsForAdmin :many
+SELECT 
+  t.id,
+  oc.province,
+  dc.province,
+  re.status,
+  p.status as payment_status
+FROM "reservation" re 
+INNER JOIN "payment" p ON p.id = re.payment_id
+INNER JOIN "ticket" t ON re.ticket_id = t.id
+INNER JOIN "route" ro ON t.route_id = ro.id
+INNER JOIN "city" oc ON oc.id = ro.origin_city_id
+INNER JOIN "city" dc ON dc.id = ro.destination_city_id
+WHERE p.status != 'COMPLETED' AND re.user_id = $1;

@@ -90,3 +90,8 @@ UPDATE reservation
 SET status = 'CANCELED-BY-TIME'
 WHERE (created_at + duration_time) < now()
   AND status != 'RESERVED';
+
+-- name: GetReservationByTicketID :one
+SELECT t.*, r.user_id as user_id, r.payment_id as payment_id FROM "reservation" r
+INNER JOIN "ticket" t ON t.id = r.ticket_id
+WHERE r.id = $1 LIMIT 1;
