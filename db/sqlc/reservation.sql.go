@@ -206,6 +206,49 @@ func (q *Queries) GetIDReservation(ctx context.Context, id int64) ([]int64, erro
 	return items, nil
 }
 
+const getReservationByTicketID = `-- name: GetReservationByTicketID :one
+SELECT t.id, t.vehicle_id, t.seat_id, t.vehicle_type, t.route_id, t.amount, t.departure_time, t.arrival_time, t.count_stand, t.status, t.created_at, r.user_id as user_id, r.payment_id as payment_id FROM "reservation" r
+INNER JOIN "ticket" t ON t.id = r.ticket_id
+WHERE r.id = $1 LIMIT 1
+`
+
+type GetReservationByTicketIDRow struct {
+	ID            int64                        `json:"id"`
+	VehicleID     int64                        `json:"vehicle_id"`
+	SeatID        int64                        `json:"seat_id"`
+	VehicleType   VehicleType                  `json:"vehicle_type"`
+	RouteID       int64                        `json:"route_id"`
+	Amount        int64                        `json:"amount"`
+	DepartureTime time.Time                    `json:"departure_time"`
+	ArrivalTime   time.Time                    `json:"arrival_time"`
+	CountStand    int32                        `json:"count_stand"`
+	Status        CheckReservationTicketStatus `json:"status"`
+	CreatedAt     time.Time                    `json:"created_at"`
+	UserID        int64                        `json:"user_id"`
+	PaymentID     int64                        `json:"payment_id"`
+}
+
+func (q *Queries) GetReservationByTicketID(ctx context.Context, id int64) (GetReservationByTicketIDRow, error) {
+	row := q.db.QueryRowContext(ctx, getReservationByTicketID, id)
+	var i GetReservationByTicketIDRow
+	err := row.Scan(
+		&i.ID,
+		&i.VehicleID,
+		&i.SeatID,
+		&i.VehicleType,
+		&i.RouteID,
+		&i.Amount,
+		&i.DepartureTime,
+		&i.ArrivalTime,
+		&i.CountStand,
+		&i.Status,
+		&i.CreatedAt,
+		&i.UserID,
+		&i.PaymentID,
+	)
+	return i, err
+}
+
 const getReservationDetails = `-- name: GetReservationDetails :one
 SELECT
     r.id,

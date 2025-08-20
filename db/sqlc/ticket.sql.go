@@ -128,6 +128,59 @@ func (q *Queries) GetAllUserCompletedTickets(ctx context.Context, userID int64) 
 	return items, nil
 }
 
+const getAllUserCompletedTicketsForAdmin = `-- name: GetAllUserCompletedTicketsForAdmin :many
+SELECT 
+  t.id,
+  oc.province,
+  dc.province,
+  re.status,
+  p.status as payment_status
+FROM "reservation" re 
+INNER JOIN "payment" p ON p.id = re.payment_id
+INNER JOIN "ticket" t ON re.ticket_id = t.id
+INNER JOIN "route" ro ON t.route_id = ro.id
+INNER JOIN "city" oc ON oc.id = ro.origin_city_id
+INNER JOIN "city" dc ON dc.id = ro.destination_city_id
+WHERE p.status = 'COMPLETED' AND re.user_id = $1
+`
+
+type GetAllUserCompletedTicketsForAdminRow struct {
+	ID            int64         `json:"id"`
+	Province      string        `json:"province"`
+	Province_2    string        `json:"province_2"`
+	Status        TicketStatus  `json:"status"`
+	PaymentStatus PaymentStatus `json:"payment_status"`
+}
+
+func (q *Queries) GetAllUserCompletedTicketsForAdmin(ctx context.Context, userID int64) ([]GetAllUserCompletedTicketsForAdminRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAllUserCompletedTicketsForAdmin, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetAllUserCompletedTicketsForAdminRow{}
+	for rows.Next() {
+		var i GetAllUserCompletedTicketsForAdminRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Province,
+			&i.Province_2,
+			&i.Status,
+			&i.PaymentStatus,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const getAllUserNotCompletedTickets = `-- name: GetAllUserNotCompletedTickets :many
 SELECT 
 t.id,
@@ -167,6 +220,59 @@ func (q *Queries) GetAllUserNotCompletedTickets(ctx context.Context, userID int6
 			&i.Province_2,
 			&i.Status,
 			&i.Status_2,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getAllUserNotCompletedTicketsForAdmin = `-- name: GetAllUserNotCompletedTicketsForAdmin :many
+SELECT 
+  t.id,
+  oc.province,
+  dc.province,
+  re.status,
+  p.status as payment_status
+FROM "reservation" re 
+INNER JOIN "payment" p ON p.id = re.payment_id
+INNER JOIN "ticket" t ON re.ticket_id = t.id
+INNER JOIN "route" ro ON t.route_id = ro.id
+INNER JOIN "city" oc ON oc.id = ro.origin_city_id
+INNER JOIN "city" dc ON dc.id = ro.destination_city_id
+WHERE p.status != 'COMPLETED' AND re.user_id = $1
+`
+
+type GetAllUserNotCompletedTicketsForAdminRow struct {
+	ID            int64         `json:"id"`
+	Province      string        `json:"province"`
+	Province_2    string        `json:"province_2"`
+	Status        TicketStatus  `json:"status"`
+	PaymentStatus PaymentStatus `json:"payment_status"`
+}
+
+func (q *Queries) GetAllUserNotCompletedTicketsForAdmin(ctx context.Context, userID int64) ([]GetAllUserNotCompletedTicketsForAdminRow, error) {
+	rows, err := q.db.QueryContext(ctx, getAllUserNotCompletedTicketsForAdmin, userID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GetAllUserNotCompletedTicketsForAdminRow{}
+	for rows.Next() {
+		var i GetAllUserNotCompletedTicketsForAdminRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Province,
+			&i.Province_2,
+			&i.Status,
+			&i.PaymentStatus,
 		); err != nil {
 			return nil, err
 		}
