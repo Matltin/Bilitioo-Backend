@@ -8,6 +8,7 @@ import (
 	"github.com/Matltin/Bilitioo-Backend/token"
 	"github.com/Matltin/Bilitioo-Backend/util"
 	"github.com/Matltin/Bilitioo-Backend/worker"
+	"github.com/elastic/go-elasticsearch"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
@@ -15,26 +16,28 @@ import (
 )
 
 type Server struct {
-	config       util.Config
-	router       *gin.Engine
-	Queries      *db.Queries
-	tokenMaker   token.Maker
-	distribution worker.TaskDistributor
-	redisClient  *db_redis.Client
+	config        util.Config
+	router        *gin.Engine
+	Queries       *db.Queries
+	tokenMaker    token.Maker
+	distribution  worker.TaskDistributor
+	redisClient   *db_redis.Client
+	elasticClient *elasticsearch.Client
 }
 
-func NewServer(config util.Config, distributor worker.TaskDistributor, db *db.Queries, redis *db_redis.Client) *Server {
+func NewServer(config util.Config, distributor worker.TaskDistributor, db *db.Queries, redis *db_redis.Client, es *elasticsearch.Client) *Server {
 	tokenMaker, err := token.NewPasetoMaker(config.TokenSymmetrickey)
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	ser := &Server{
-		config:       config,
-		Queries:      db,
-		tokenMaker:   tokenMaker,
-		distribution: distributor,
-		redisClient:  redis,
+		config:        config,
+		elasticClient: es,
+		Queries:       db,
+		tokenMaker:    tokenMaker,
+		distribution:  distributor,
+		redisClient:   redis,
 	}
 
 	ser.setupRouter()
