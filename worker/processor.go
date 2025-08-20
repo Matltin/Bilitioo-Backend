@@ -6,6 +6,7 @@ import (
 
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"
 	"github.com/Matltin/Bilitioo-Backend/mail"
+	"github.com/elastic/go-elasticsearch/v8"
 	"github.com/hibiken/asynq"
 )
 
@@ -17,15 +18,17 @@ const (
 type TaskProcessor interface {
 	Start() error
 	ProcessTaskSendVerifyEmail(ctx context.Context, task *asynq.Task) error
+	ProcessTaskIndexTickets(ctx context.Context, task *asynq.Task) error
 }
 
 type RedisTaskProcessor struct {
-	server  *asynq.Server
-	Queries *db.Queries
-	mailer  mail.EmailSender
+	server      *asynq.Server
+	Queries     *db.Queries
+	mailer      mail.EmailSender
+	elasticClient *elasticsearch.Client
 }
 
-func NewRedisTaskProcessor(redisOpt asynq.RedisClientOpt, Queries *db.Queries, mailer mail.EmailSender) TaskProcessor {
+func NewRedisTaskProcessor(redisOpt asynq.RedisClientOpt, Queries *db.Queries, mailer mail.EmailSender, es *elasticsearch.Client) TaskProcessor {
 	server := asynq.NewServer(
 		redisOpt,
 		asynq.Config{
@@ -40,15 +43,17 @@ func NewRedisTaskProcessor(redisOpt asynq.RedisClientOpt, Queries *db.Queries, m
 	)
 
 	return &RedisTaskProcessor{
-		server:  server,
-		Queries: Queries,
-		mailer:  mailer,
+		server:      server,
+		Queries:     Queries,
+		mailer:      mailer,
+		elasticClient: es,
 	}
 }
 
 func (processor RedisTaskProcessor) Start() error {
 	mux := asynq.NewServeMux()
 
+	mux.HandleFunc(TaskIndexTickets, processor.ProcessTaskIndexTickets)
 	mux.HandleFunc(TaskSendVerifyEmail, processor.ProcessTaskSendVerifyEmail)
 
 	mux.HandleFunc(TaskCleanExpiredReservations, processor.ProcessTaskCleanExpiredReservations)
