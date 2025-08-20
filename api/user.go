@@ -102,8 +102,6 @@ func isValidEmail(email string) bool {
 // 	ctx.JSON(http.StatusOK, nil)
 // }
 
-
-
 // func (server *Server) logInUser(ctx *gin.Context) {
 // 	var req logInUserRequest
 // 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -158,7 +156,18 @@ type signUpUserRequest struct {
 	Password    string `json:"password" binding:"required,min=8"`
 }
 
-// api/auth.go
+//	@Summary		Register a new user
+//	@Description	Register a new user using email or phone number. Sends a verification email after signup.
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		signUpUserRequest	true	"Signup request"
+//	@Success		200		{object}	nil
+//	@Failure		400		{object}	map[string]string
+//	@Failure		403		{object}	map[string]string
+//	@Failure		429		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/auth/register [post]
 func (server *Server) registerUserRedis(ctx *gin.Context) {
 	var req signUpUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -267,7 +276,18 @@ type logInUserResponse struct {
 	AccessToken string        `json:"access_token"`
 }
 
-// api/auth.go
+//	@Summary		Log in a user
+//	@Description	Login user using email or phone number. Returns an access token.
+//	@Tags			Auth
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		logInUserRequest	true	"Login request"
+//	@Success		200		{object}	logInUserResponse
+//	@Failure		400		{object}	map[string]string
+//	@Failure		401		{object}	map[string]string
+//	@Failure		404		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/auth/login [post]
 func (server *Server) loginUserRedis(ctx *gin.Context) {
 	var req logInUserRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -300,7 +320,7 @@ func (server *Server) loginUserRedis(ctx *gin.Context) {
 				return
 			}
 
-			accessToken, _, err := server.tokenMaker.CreateToken(user.ID, server.config.AccessTokenDuration)
+			accessToken, _, err := server.tokenMaker.CreateToken(user.ID, string(user.Role),server.config.AccessTokenDuration)
 			if err != nil {
 				ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 				return
@@ -355,7 +375,7 @@ func (server *Server) loginUserRedis(ctx *gin.Context) {
 		server.redisClient.Set(ctx, cacheKey, string(userJSON), 5*time.Minute)
 	}
 
-	accessToken, _, err := server.tokenMaker.CreateToken(user.ID, server.config.AccessTokenDuration)
+	accessToken, _, err := server.tokenMaker.CreateToken(user.ID, string(user.Role), server.config.AccessTokenDuration)
 	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return

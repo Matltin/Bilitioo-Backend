@@ -1,0 +1,1201 @@
+basePath: /
+definitions:
+  api.CityResponse:
+    properties:
+      county:
+        type: string
+      province:
+        type: string
+    type: object
+  api.answerReportRequest:
+    properties:
+      id:
+        type: integer
+      response_text:
+        type: string
+    type: object
+  api.cancelReservationResponse:
+    properties:
+      amount_refunded:
+        type: integer
+      change_reservation:
+        $ref: '#/definitions/db.ChangeReservation'
+      message:
+        type: string
+      ticket_id:
+        type: integer
+    type: object
+  api.createReportRequest:
+    properties:
+      request_text:
+        type: string
+      request_type:
+        type: string
+      reservation_id:
+        type: integer
+    type: object
+  api.createReservationRequest:
+    properties:
+      tickets:
+        items:
+          type: integer
+        type: array
+    required:
+    - tickets
+    type: object
+  api.logInUserRequest:
+    properties:
+      email:
+        type: string
+      password:
+        type: string
+      phone_number:
+        type: string
+    type: object
+  api.logInUserResponse:
+    properties:
+      access_token:
+        type: string
+      user:
+        $ref: '#/definitions/db.GetUserRow'
+    type: object
+  api.payPaymentRequest:
+    properties:
+      payment_id:
+        type: integer
+      payment_status:
+        enum:
+        - PENDING
+        - COMPLETED
+        - FAILED
+        - REFUNDED
+        type: string
+      reservation_status:
+        enum:
+        - RESERVED
+        - RESERVING
+        - CANCELED
+        - CANCELED-BY-TIME
+        type: string
+      type:
+        enum:
+        - CASH
+        - CREDIT_CARD
+        - WALLET
+        - BANK_TRANSFER
+        - CRYPTO
+        type: string
+      user_activity_id:
+        type: integer
+    required:
+    - payment_id
+    - payment_status
+    - reservation_status
+    - type
+    type: object
+  api.searchTicketsByCitiesRequest:
+    properties:
+      destination_city_id:
+        type: integer
+      origin_city_id:
+        type: integer
+      vehicle_type:
+        enum:
+        - BUS
+        - AIRPLANE
+        - TRAIN
+        type: string
+    required:
+    - destination_city_id
+    - origin_city_id
+    - vehicle_type
+    type: object
+  api.searchTicketsRequest:
+    properties:
+      departure_date:
+        type: string
+      destination_city_id:
+        type: integer
+      origin_city_id:
+        type: integer
+      vehicle_type:
+        enum:
+        - BUS
+        - TRAIN
+        - AIRPLANE
+        type: string
+    required:
+    - departure_date
+    - destination_city_id
+    - origin_city_id
+    - vehicle_type
+    type: object
+  api.signUpUserRequest:
+    properties:
+      email:
+        type: string
+      password:
+        minLength: 8
+        type: string
+      phone_number:
+        type: string
+    required:
+    - password
+    type: object
+  api.updateProfileRequest:
+    properties:
+      city_id:
+        type: integer
+      email:
+        type: string
+      first_name:
+        type: string
+      last_name:
+        type: string
+      national_code:
+        type: string
+      password:
+        type: string
+      phone_number:
+        type: string
+      pic_dir:
+        type: string
+    type: object
+  api.updateProfileResponse:
+    properties:
+      profile:
+        $ref: '#/definitions/db.Profile'
+      user:
+        $ref: '#/definitions/db.User'
+    type: object
+  api.updateTicketByReportRequest:
+    properties:
+      reserevation_id:
+        type: integer
+      to_status_reservation:
+        type: string
+    type: object
+  db.ChangeReservation:
+    properties:
+      admin_id:
+        type: integer
+      from_status:
+        $ref: '#/definitions/db.TicketStatus'
+      id:
+        type: integer
+      reservation_id:
+        type: integer
+      to_status:
+        $ref: '#/definitions/db.TicketStatus'
+      user_id:
+        type: integer
+    type: object
+  db.CheckReservationTicketStatus:
+    enum:
+    - RESERVED
+    - NOT_RESERVED
+    type: string
+    x-enum-varnames:
+    - CheckReservationTicketStatusRESERVED
+    - CheckReservationTicketStatusNOTRESERVED
+  db.GetAllUserReservationRow:
+    properties:
+      id:
+        type: integer
+      id_2:
+        type: integer
+      province:
+        type: string
+      province_2:
+        type: string
+    type: object
+  db.GetCompletedUserReservationRow:
+    properties:
+      province:
+        type: string
+      province_2:
+        type: string
+      reservation_id:
+        type: integer
+      ticket_id:
+        type: integer
+    type: object
+  db.GetUserProfileRow:
+    properties:
+      city_id:
+        type: integer
+      created_at:
+        type: string
+      email:
+        type: string
+      email_verified:
+        type: boolean
+      first_name:
+        type: string
+      last_name:
+        type: string
+      national_code:
+        type: string
+      phone_number:
+        type: string
+      phone_verified:
+        type: boolean
+      pic_dir:
+        type: string
+      role:
+        $ref: '#/definitions/db.Role'
+      status:
+        $ref: '#/definitions/db.UserStatus'
+      user_id:
+        type: integer
+      wallet:
+        type: integer
+    type: object
+  db.GetUserRow:
+    properties:
+      email:
+        type: string
+      email_verified:
+        type: boolean
+      hashed_password:
+        type: string
+      id:
+        type: integer
+      phone_number:
+        type: string
+      phone_verified:
+        type: boolean
+    type: object
+  db.Penalty:
+    properties:
+      after_day:
+        type: integer
+      befor_day:
+        type: integer
+      id:
+        type: integer
+      penalty_text:
+        type: string
+      vehicle_id:
+        type: integer
+    type: object
+  db.Profile:
+    properties:
+      city_id:
+        type: integer
+      first_name:
+        type: string
+      last_name:
+        type: string
+      national_code:
+        type: string
+      pic_dir:
+        type: string
+      user_id:
+        type: integer
+      wallet:
+        type: integer
+    type: object
+  db.Report:
+    properties:
+      admin_id:
+        type: integer
+      id:
+        type: integer
+      request_text:
+        type: string
+      request_type:
+        $ref: '#/definitions/db.RequestType'
+      reservation_id:
+        type: integer
+      response_text:
+        type: string
+      user_id:
+        type: integer
+    type: object
+  db.RequestType:
+    enum:
+    - PAYMENT-ISSUE
+    - TRAVEL-DELAY
+    - UNEXPECTED-RESERVED
+    - ETC.
+    type: string
+    x-enum-varnames:
+    - RequestTypePAYMENTISSUE
+    - RequestTypeTRAVELDELAY
+    - RequestTypeUNEXPECTEDRESERVED
+    - RequestTypeETC
+  db.Role:
+    enum:
+    - ADMIN
+    - USER
+    type: string
+    x-enum-varnames:
+    - RoleADMIN
+    - RoleUSER
+  db.SearchTicketsByCitiesRow:
+    properties:
+      amount:
+        type: integer
+      arrival_time:
+        type: string
+      capacity:
+        type: integer
+      company_name:
+        type: string
+      departure_time:
+        type: string
+      destination_city_id:
+        type: integer
+      destination_county:
+        type: string
+      destination_province:
+        type: string
+      origin_city_id:
+        type: integer
+      origin_county:
+        type: string
+      origin_province:
+        type: string
+      route_id:
+        type: integer
+      status:
+        $ref: '#/definitions/db.CheckReservationTicketStatus'
+      ticket_id:
+        type: integer
+      vehicle_type:
+        $ref: '#/definitions/db.VehicleType'
+    type: object
+  db.Ticket:
+    properties:
+      amount:
+        type: integer
+      arrival_time:
+        type: string
+      count_stand:
+        type: integer
+      created_at:
+        type: string
+      departure_time:
+        type: string
+      id:
+        type: integer
+      route_id:
+        type: integer
+      seat_id:
+        type: integer
+      status:
+        $ref: '#/definitions/db.CheckReservationTicketStatus'
+      vehicle_id:
+        type: integer
+      vehicle_type:
+        $ref: '#/definitions/db.VehicleType'
+    type: object
+  db.TicketStatus:
+    enum:
+    - RESERVED
+    - RESERVING
+    - CANCELED
+    - CANCELED-BY-TIME
+    type: string
+    x-enum-varnames:
+    - TicketStatusRESERVED
+    - TicketStatusRESERVING
+    - TicketStatusCANCELED
+    - TicketStatusCANCELEDBYTIME
+  db.User:
+    properties:
+      created_at:
+        type: string
+      email:
+        type: string
+      email_verified:
+        type: boolean
+      hashed_password:
+        type: string
+      id:
+        type: integer
+      password_change_at:
+        type: string
+      phone_number:
+        type: string
+      phone_verified:
+        type: boolean
+      role:
+        $ref: '#/definitions/db.Role'
+      status:
+        $ref: '#/definitions/db.UserStatus'
+    type: object
+  db.UserStatus:
+    enum:
+    - ACTIVE
+    - NON-ACTIVE
+    type: string
+    x-enum-varnames:
+    - UserStatusACTIVE
+    - UserStatusNONACTIVE
+  db.VehicleType:
+    enum:
+    - BUS
+    - TRAIN
+    - AIRPLANE
+    type: string
+    x-enum-varnames:
+    - VehicleTypeBUS
+    - VehicleTypeTRAIN
+    - VehicleTypeAIRPLANE
+host: localhost:3000
+info:
+  contact:
+    email: support@example.com
+    name: API Support
+    url: http://www.example.com/support
+  description: API for Bilitio ticket booking system.
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+  termsOfService: http://localhost:3000/swagger/index.html
+  title: Bilitio API
+  version: "1.0"
+paths:
+  /auth/login:
+    post:
+      consumes:
+      - application/json
+      description: Login user using email or phone number. Returns an access token.
+      parameters:
+      - description: Login request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.logInUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.logInUserResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Log in a user
+      tags:
+      - Auth
+  /auth/register:
+    post:
+      consumes:
+      - application/json
+      description: Register a new user using email or phone number. Sends a verification
+        email after signup.
+      parameters:
+      - description: Signup request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.signUpUserRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "429":
+          description: Too Many Requests
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register a new user
+      tags:
+      - Auth
+  /city:
+    get:
+      consumes:
+      - application/json
+      description: Returns a list of all cities available for booking.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/api.CityResponse'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all cities
+      tags:
+      - Cities
+  /payment:
+    post:
+      consumes:
+      - application/json
+      description: Updates payment and reservation status. Requires authentication.
+      parameters:
+      - description: Payment request body
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.payPaymentRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Pay for a reservation
+      tags:
+      - Payment
+  /penalty/{ticket_id}:
+    put:
+      consumes:
+      - application/json
+      description: Cancel a ticket reservation and calculate penalty refund. Requires
+        authentication.
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: ticket_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.cancelReservationResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Cancel a reservation
+      tags:
+      - Reservation
+  /profile:
+    get:
+      description: Get the profile of the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.GetUserProfileRow'
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Get user profile
+      tags:
+      - Users
+    put:
+      consumes:
+      - application/json
+      description: Update user profile details including name, contact info, password,
+        and profile picture
+      parameters:
+      - description: Profile update payload
+        in: body
+        name: updateProfileRequest
+        required: true
+        schema:
+          $ref: '#/definitions/api.updateProfileRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/api.updateProfileResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - ApiKeyAuth: []
+      summary: Update user profile
+      tags:
+      - Users
+  /reports:
+    get:
+      description: Get all reports from the database
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.Report'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all reports
+      tags:
+      - reports
+    post:
+      consumes:
+      - application/json
+      description: User creates a new report
+      parameters:
+      - description: Report creation
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.createReportRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.Report'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a report
+      tags:
+      - reports
+  /reports/answer:
+    post:
+      consumes:
+      - application/json
+      description: Admin answers a user report
+      parameters:
+      - description: Report answer
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.answerReportRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/db.Report'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Answer a report
+      tags:
+      - reports
+  /reports/ticket:
+    put:
+      consumes:
+      - application/json
+      description: Admin updates a ticket status based on a report
+      parameters:
+      - description: Ticket update
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.updateTicketByReportRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update ticket by report
+      tags:
+      - reports
+  /reservations:
+    post:
+      consumes:
+      - application/json
+      description: Creates reservations for selected tickets and generates a payment
+        record
+      parameters:
+      - description: Reservation request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.createReservationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Reservations and payment
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "403":
+          description: Forbidden
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create a reservation
+      tags:
+      - reservations
+  /reservations/user:
+    get:
+      description: Retrieves all reservations of the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.GetAllUserReservationRow'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all user reservations
+      tags:
+      - reservations
+  /reservations/user/completed:
+    get:
+      description: Retrieves all completed reservations of the authenticated user
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.GetCompletedUserReservationRow'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get completed user reservations
+      tags:
+      - reservations
+  /ticket-penalties/{ticket_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve penalties associated with a specific ticket. Requires
+        authentication.
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: ticket_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: List of penalties
+          schema:
+            items:
+              $ref: '#/definitions/db.Penalty'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Get penalties for a ticket
+      tags:
+      - Penalties
+  /tickets:
+    get:
+      description: Retrieve all tickets from the system
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.Ticket'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all tickets
+      tags:
+      - tickets
+  /tickets/{ticket_id}:
+    get:
+      consumes:
+      - application/json
+      description: Retrieve detailed info for a ticket by ID
+      parameters:
+      - description: Ticket ID
+        in: path
+        name: ticket_id
+        required: true
+        type: integer
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties: true
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get ticket details
+      tags:
+      - tickets
+  /tickets/search:
+    post:
+      consumes:
+      - application/json
+      description: Search tickets by origin, destination, date, and vehicle type
+      parameters:
+      - description: Search tickets request
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/api.searchTicketsRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.Ticket'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Search tickets
+      tags:
+      - tickets
+  /tickets/user/completed:
+    get:
+      description: Get all tickets the authenticated user has completed
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.Ticket'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get completed tickets for user
+      tags:
+      - tickets
+  /tickets/user/not-completed:
+    get:
+      description: Get all tickets the authenticated user has reserved but not completed
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/db.Ticket'
+            type: array
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get not completed tickets for user
+      tags:
+      - tickets
+  /verify-email:
+    post:
+      consumes:
+      - application/json
+      description: Confirms email ownership by validating a verification code. Requires
+        authentication if user is logged in.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      security:
+      - BearerAuth: []
+      summary: Verify user email
+      tags:
+      - Users
+schemes:
+- http
+securityDefinitions:
+  BearerAuth:
+    in: header
+    name: Authorization
+    type: apiKey
+swagger: "2.0"

@@ -9,3 +9,18 @@ CREATE TABLE "verify_emails" (
 );
 
 ALTER TABLE "verify_emails" ADD FOREIGN KEY ("user_id") REFERENCES "user" ("id");
+
+-- Create random admin users
+INSERT INTO "user" (
+  "email", 
+  "phone_number", 
+  "hashed_password", 
+  "role", 
+  "status", 
+  "phone_verified", 
+  "email_verified"
+) VALUES 
+-- Admin users
+('admin@transport.ir', '09123456789', 'test_password', 'ADMIN', 'ACTIVE', true, true),
+('manager@transport.ir', '09123456788', 'test_password', 'ADMIN', 'ACTIVE', true, true),
+('support@transport.ir', '09123456787', 'test_password', 'ADMIN', 'ACTIVE', true, true);

@@ -97,6 +97,18 @@ type searchTicketsRequest struct {
 	VehicleType       string `json:"vehicle_type" binding:"required,oneof=BUS TRAIN AIRPLANE"`
 }
 
+// searchTickets godoc
+//
+//	@Summary		Search tickets
+//	@Description	Search tickets by origin, destination, date, and vehicle type
+//	@Tags			tickets
+//	@Accept			json
+//	@Produce		json
+//	@Param			request	body		searchTicketsRequest	true	"Search tickets request"
+//	@Success		200		{array}		db.Ticket
+//	@Failure		400		{object}	map[string]string
+//	@Failure		500		{object}	map[string]string
+//	@Router			/tickets/search [post]
 func (server *Server) searchTickets(ctx *gin.Context) {
 	var req searchTicketsRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -151,6 +163,19 @@ type getTicketDetailsRequest struct {
 	TicketID int64 `uri:"ticket_id" binding:"required"`
 }
 
+// getTicketDetails godoc
+//
+//	@Summary		Get ticket details
+//	@Description	Retrieve detailed info for a ticket by ID
+//	@Tags			tickets
+//	@Accept			json
+//	@Produce		json
+//	@Param			ticket_id	path		int64	true	"Ticket ID"
+//	@Success		200			{object}	map[string]interface{}
+//	@Failure		400			{object}	map[string]string
+//	@Failure		404			{object}	map[string]string
+//	@Failure		500			{object}	map[string]string
+//	@Router			/tickets/{ticket_id} [get]
 func (server *Server) getTicketDetails(ctx *gin.Context) {
 	var req getTicketDetailsRequest
 	if err := ctx.ShouldBindUri(&req); err != nil {
@@ -212,6 +237,16 @@ func (server *Server) getTicketDetails(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, response)
 }
 
+// getAllUserCompletedTickets godoc
+//
+//	@Summary		Get completed tickets for user
+//	@Description	Get all tickets the authenticated user has completed
+//	@Tags			tickets
+//	@Produce		json
+//	@Success		200	{array}		db.Ticket
+//	@Failure		404	{object}	map[string]string
+//	@Failure		500	{object}	map[string]string
+//	@Router			/tickets/user/completed [get]
 func (server *Server) getAllUserCompletedTickets(ctx *gin.Context) {
 	authPayload := ctx.MustGet(authorizationPyloadKey).(*token.Payload)
 	tickets, err := server.Queries.GetAllUserCompletedTickets(ctx, authPayload.UserID)
@@ -227,6 +262,16 @@ func (server *Server) getAllUserCompletedTickets(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, tickets)
 }
 
+// getAllUserNotCompletedTickets godoc
+//
+//	@Summary		Get not completed tickets for user
+//	@Description	Get all tickets the authenticated user has reserved but not completed
+//	@Tags			tickets
+//	@Produce		json
+//	@Success		200	{array}		db.Ticket
+//	@Failure		404	{object}	map[string]string
+//	@Failure		500	{object}	map[string]string
+//	@Router			/tickets/user/not-completed [get]
 func (server *Server) getAllUserNotCompletedTickets(ctx *gin.Context) {
 	authPayload := ctx.MustGet(authorizationPyloadKey).(*token.Payload)
 	tickets, err := server.Queries.GetAllUserNotCompletedTickets(ctx, authPayload.UserID)
@@ -242,6 +287,16 @@ func (server *Server) getAllUserNotCompletedTickets(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, tickets)
 }
 
+// getAllTickets godoc
+//
+//	@Summary		Get all tickets
+//	@Description	Retrieve all tickets from the system
+//	@Tags			tickets
+//	@Produce		json
+//	@Success		200	{array}		db.Ticket
+//	@Failure		404	{object}	map[string]string
+//	@Failure		500	{object}	map[string]string
+//	@Router			/tickets [get]
 func (server *Server) getAllTickets(ctx *gin.Context) {
 	tickets, err := server.Queries.GetAllTickets(ctx)
 	if err != nil {

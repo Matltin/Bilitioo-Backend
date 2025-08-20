@@ -56,4 +56,13 @@ build:
 bilitioo:
 	docker run --name bilitioo --network bilitioo-network -p 8080:8080 -e GIN_MODE=release -e DB_SOURCE="postgresql://root:secret@172.19.0.3:5432/bilitioo?sslmode=disable" bilitioo:latest
 
-.PHONY: sqlc test	
+start:
+	swag init
+	swag fmt
+	kill -9 $(shell lsof -t -i :3000) 2>/dev/null || true
+	go run main.go
+
+.PHONY: postgres psql createdb dropdb \
+	migrateup migrateup1 migratedown migratedown1 \
+	new_migrate dockerup dockerdown dockerlogs dockerstart dockerstop \
+	sqlc test restart build bilitioo

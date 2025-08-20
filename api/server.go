@@ -8,7 +8,10 @@ import (
 	"github.com/Matltin/Bilitioo-Backend/token"
 	"github.com/Matltin/Bilitioo-Backend/util"
 	"github.com/Matltin/Bilitioo-Backend/worker"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
+	swaggerFiles "github.com/swaggo/files"
+	ginSwagger "github.com/swaggo/gin-swagger"
 )
 
 type Server struct {
@@ -42,36 +45,71 @@ func NewServer(config util.Config, distributor worker.TaskDistributor, db *db.Qu
 func (ser *Server) setupRouter() {
 	router := gin.Default()
 
-	router.POST("/sign-in", ser.registerUserRedis) //1
-	router.POST("/log-in", ser.loginUserRedis)  //2
+	// Add CORS middleware - IMPORTANT for frontend integration
+	config := cors.DefaultConfig()
+	config.AllowOrigins = []string{
+		"http://localhost:8080",
+		"http://127.0.0.1:8080",
+		"http://localhost:3000", // For development
+		"*",                     // For testing - remove in production
+	}
+	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
+	config.AllowHeaders = []string{
+		"Origin",
+		"Content-Type",
+		"Authorization",
+		"Access-Control-Allow-Origin",
+		"Access-Control-Allow-Headers",
+	}
+	config.AllowCredentials = true
+
+	router.Use(cors.New(config))
+
+	swaggerUrl := ginSwagger.URL("http://localhost:3000/swagger/doc.json")
+	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler, swaggerUrl))
+
+	// Public routes (no authentication required)
+	router.POST("/sign-in", ser.registerUserRedis)
+	router.POST("/log-in", ser.loginUserRedis)
 	router.GET("/verify-email", ser.verifyEmail)
 
+	// Protected routes (authentication required)
 	authRoutes := router.Group("/").Use(authMiddleware(ser.tokenMaker))
+	{
+		// User routes
+		authRoutes.PUT("/profile", ser.updateProfile)
+		authRoutes.GET("/profile", ser.getUserProfile)
+		authRoutes.GET("/city", ser.getCities)
+		authRoutes.POST("/city", ser.searchTicketsByCities)
+		authRoutes.POST("/search-tickets", ser.searchTickets)
+		authRoutes.GET("/ticket-detail/:ticket_id", ser.getTicketDetails)
+		authRoutes.POST("/reservation", ser.createReservation)
+		authRoutes.GET("/completedReservation", ser.getCompletedUserReservation)
+		authRoutes.GET("/allReservation", ser.getAllUserReservation)
+		authRoutes.POST("/payment", ser.payPayment)
+		authRoutes.GET("/ticket-penalties/:ticket_id", ser.getTicketPenalties)
+		authRoutes.GET("/penalty/:ticket_id", ser.getTicketPenalties)
+		authRoutes.PUT("/penalty/:ticket_id", ser.cancelReservation)
+		authRoutes.GET("/completed-tickets", ser.getAllUserCompletedTickets)
+		authRoutes.GET("/notcompleted-tickets", ser.getAllUserNotCompletedTickets)
+		authRoutes.POST("/report", ser.createReport) // Users can create reports
+	}
 
-	authRoutes.PUT("/profile", ser.updateProfile) //3
-	authRoutes.GET("/profile", ser.getUserProfile)  //3
-	authRoutes.GET("/city", ser.getCities)  //4
-	authRoutes.POST("/city", ser.searchTicketsByCities) //4
-	authRoutes.GET("/search-tickets", ser.searchTickets) //5
-	authRoutes.GET("/ticket-detail/:ticket_id", ser.getTicketDetails)  //6
-	authRoutes.POST("/reservation", ser.createReservation)  //7
-	authRoutes.GET("/completedReservation", ser.getCompletedUserReservation)
-	authRoutes.GET("/allReservation", ser.getAllUserReservation)
-	authRoutes.POST("/payment", ser.payPayment)  //8
+	// Admin-only routes (requires both authentication and admin role)
+	adminRoutes := router.Group("/admin").Use(authMiddleware(ser.tokenMaker))
+	{
+		adminRoutes.GET("/reports", ser.getReports)                  // Admin only
+		adminRoutes.PUT("/reports/manage", ser.updateTicketByReport) // Admin only
+		adminRoutes.PUT("/reports/answer", ser.answerReport)         // Admin only
+		adminRoutes.GET("/tickets", ser.getAllTickets)               // Admin only
+	}
 
-
-	authRoutes.GET("/ticket-penalties/:ticket_id", ser.getTicketPenalties)  //9
-	authRoutes.GET("/penalty/:ticket_id", ser.getTicketPenalties) //9
-	authRoutes.PUT("/penalty/:ticket_id", ser.cancelReservation)  //9, 12
-
-	authRoutes.GET("/report", ser.getReports) //10
-	authRoutes.PUT("/manage-report", ser.updateTicketByReport)  //10
-	authRoutes.PUT("/report", ser.answerReport) //13
-	authRoutes.POST("/report", ser.createReport) //13
-
-	authRoutes.GET("/completed-tickets", ser.getAllUserCompletedTickets) //11
-	authRoutes.GET("/notcompleted-tickets", ser.getAllUserNotCompletedTickets) //11
-	authRoutes.GET("/tickets", ser.getAllTickets) //11
+	// Alternative: Mixed routes where some endpoints need admin access
+	mixedRoutes := router.Group("/").Use(authMiddleware(ser.tokenMaker))
+	{
+		// This endpoint can be accessed by both users and admins, but with different responses
+		mixedRoutes.GET("/reports", ser.getReportsWithRoleCheck)
+	}
 
 	ser.router = router
 }
@@ -81,5 +119,6 @@ func (server *Server) Start(add string) {
 }
 
 func errorResponse(err error) gin.H {
+	log.Println("error: ", err.Error())
 	return gin.H{"error": err.Error()}
 }

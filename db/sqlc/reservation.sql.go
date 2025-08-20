@@ -70,24 +70,31 @@ func (q *Queries) CreateReservation(ctx context.Context, arg CreateReservationPa
 }
 
 const getAllUserReservation = `-- name: GetAllUserReservation :many
-SELECT 
+SELECT
     re.id,
-    t.id,
-    oc.province,
-    dc.province
-FROM "reservation" re 
+    t.id as ticket_id,
+    oc.province as origin_province,
+    dc.province as destination_province,
+    re.status,
+    re.payment_id,
+    p.amount
+FROM "reservation" re
 INNER JOIN "ticket" t ON re.ticket_id = t.id
 INNER JOIN "route" ro ON t.route_id = ro.id
 INNER JOIN "city" oc ON oc.id = ro.origin_city_id
 INNER JOIN "city" dc ON dc.id = ro.destination_city_id
-WHERE re.status != 'RESERVED' AND re.user_id = $1
+INNER JOIN "payment" p ON re.payment_id = p.id -- Join with payment table
+WHERE re.user_id = $1
 `
 
 type GetAllUserReservationRow struct {
-	ID         int64  `json:"id"`
-	ID_2       int64  `json:"id_2"`
-	Province   string `json:"province"`
-	Province_2 string `json:"province_2"`
+	ID                  int64        `json:"id"`
+	TicketID            int64        `json:"ticket_id"`
+	OriginProvince      string       `json:"origin_province"`
+	DestinationProvince string       `json:"destination_province"`
+	Status              TicketStatus `json:"status"`
+	PaymentID           int64        `json:"payment_id"`
+	Amount              int64        `json:"amount"`
 }
 
 func (q *Queries) GetAllUserReservation(ctx context.Context, userID int64) ([]GetAllUserReservationRow, error) {
@@ -101,9 +108,12 @@ func (q *Queries) GetAllUserReservation(ctx context.Context, userID int64) ([]Ge
 		var i GetAllUserReservationRow
 		if err := rows.Scan(
 			&i.ID,
-			&i.ID_2,
-			&i.Province,
-			&i.Province_2,
+			&i.TicketID,
+			&i.OriginProvince,
+			&i.DestinationProvince,
+			&i.Status,
+			&i.PaymentID,
+			&i.Amount,
 		); err != nil {
 			return nil, err
 		}
@@ -206,7 +216,7 @@ SELECT
     t.status
 FROM "ticket" t
 INNER JOIN "reservation" r ON r.ticket_id = t.id 
-WHERE t.id = $1
+WHERE r.id = $1
 `
 
 type GetReservationDetailsRow struct {

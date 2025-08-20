@@ -28,6 +28,24 @@ type updateProfileRequest struct {
 	Email        string `json:"email"`
 }
 
+type updateProfileResponse struct {
+	Profile db.Profile `json:"profile"`
+	User    db.User    `json:"user"`
+}
+
+// updateProfile godoc
+//
+//	@Summary		Update user profile
+//	@Description	Update user profile details including name, contact info, password, and profile picture
+//	@Tags			Users
+//	@Accept			json
+//	@Produce		json
+//	@Param			updateProfileRequest	body		updateProfileRequest	true	"Profile update payload"
+//	@Success		200						{object}	updateProfileResponse
+//	@Failure		400						{object}	map[string]string
+//	@Failure		500						{object}	map[string]string
+//	@Security		ApiKeyAuth
+//	@Router			/profile [put]
 func (server *Server) updateProfile(ctx *gin.Context) {
 	var req updateProfileRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -150,9 +168,9 @@ func (server *Server) updateProfile(ctx *gin.Context) {
 			return
 		}
 	}
-	ctx.JSON(http.StatusOK, gin.H{
-		"profile": profile,
-		"user":    user,
+	ctx.JSON(http.StatusOK, updateProfileResponse{
+		Profile: profile,
+		User:    user,
 	})
 }
 
@@ -308,6 +326,18 @@ func (server *Server) cacheUserData(ctx *gin.Context, user db.User) error {
 // 	ctx.JSON(http.StatusOK, profile)
 // }
 
+// getUserProfile godoc
+//
+//	@Summary		Get user profile
+//	@Description	Get the profile of the authenticated user
+//	@Tags			Users
+//	@Produce		json
+//	@Success		200	{object}	db.GetUserProfileRow
+//	@Failure		500	{object}	map[string]string
+//	@Security		ApiKeyAuth
+//	@Router			/profile [get]
+// api/profile.go
+
 func (server *Server) getUserProfile(ctx *gin.Context) {
 	authPayload := ctx.MustGet(authorizationPyloadKey).(*token.Payload)
 
@@ -315,7 +345,8 @@ func (server *Server) getUserProfile(ctx *gin.Context) {
 	cacheKey := fmt.Sprintf("profile:%d", authPayload.UserID)
 	cachedProfile, err := server.redisClient.Get(ctx, cacheKey)
 	if err == nil {
-		var profile db.Profile
+		// THE FIX IS HERE: Use the correct struct `db.GetUserProfileRow`
+		var profile db.GetUserProfileRow 
 		if err := json.Unmarshal([]byte(cachedProfile), &profile); err == nil {
 			ctx.JSON(http.StatusOK, profile)
 			return
@@ -325,6 +356,10 @@ func (server *Server) getUserProfile(ctx *gin.Context) {
 	// Cache miss - get from database
 	profile, err := server.Queries.GetUserProfile(ctx, authPayload.UserID)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			ctx.JSON(http.StatusNotFound, errorResponse(err))
+			return
+		}
 		ctx.JSON(http.StatusInternalServerError, errorResponse(err))
 		return
 	}

@@ -17,6 +17,20 @@ type getTicketPenaltiesRequest struct {
 	TicketID int64 `uri:"ticket_id" binding:"required"`
 }
 
+// getTicketPenalties godoc
+//
+//	@Summary		Get penalties for a ticket
+//	@Description	Retrieve penalties associated with a specific ticket. Requires authentication.
+//	@Tags			Penalties
+//	@Accept			json
+//	@Produce		json
+//	@Param			ticket_id	path		int			true	"Ticket ID"
+//	@Success		200			{array}		db.Penalty	"List of penalties"
+//	@Failure		400			{object}	map[string]string
+//	@Failure		404			{object}	map[string]string
+//	@Failure		500			{object}	map[string]string
+//	@Security		BearerAuth
+//	@Router			/ticket-penalties/{ticket_id} [get]
 func (server *Server) getTicketPenalties(ctx *gin.Context) {
 	var req getTicketPenaltiesRequest
 
@@ -50,6 +64,21 @@ type cancelReservationResponse struct {
 	ChangeReservation db.ChangeReservation `json:"change_reservation"`
 }
 
+// cancelReservation godoc
+//
+//	@Summary		Cancel a reservation
+//	@Description	Cancel a ticket reservation and calculate penalty refund. Requires authentication.
+//	@Tags			Reservation
+//	@Accept			json
+//	@Produce		json
+//	@Param			ticket_id	path		int	true	"Ticket ID"
+//	@Success		200			{object}	cancelReservationResponse
+//	@Failure		400			{object}	map[string]string
+//	@Failure		401			{object}	map[string]string
+//	@Failure		404			{object}	map[string]string
+//	@Failure		500			{object}	map[string]string
+//	@Security		BearerAuth
+//	@Router			/penalty/{ticket_id} [put]
 func (server *Server) cancelReservation(ctx *gin.Context) {
 	var req cancelReservationRequest
 	if err := ctx.ShouldBindUri(&req); err != nil {
@@ -141,7 +170,7 @@ func (server *Server) cancelReservation(ctx *gin.Context) {
 
 	argPaymentStatus := db.UpdatePaymentStatusParams{
 		Status: db.PaymentStatusFAILED,
-		ID: reservation.PaymentID,
+		ID:     reservation.PaymentID,
 	}
 
 	_, err = server.Queries.UpdatePaymentStatus(ctx, argPaymentStatus)
