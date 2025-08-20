@@ -7,6 +7,7 @@ import (
 
 	"github.com/Matltin/Bilitioo-Backend/api"
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"
+	elasticsearch "github.com/Matltin/Bilitioo-Backend/elastic_search"
 	"github.com/Matltin/Bilitioo-Backend/mail"
 	db_redis "github.com/Matltin/Bilitioo-Backend/redis"
 	"github.com/Matltin/Bilitioo-Backend/util"
@@ -74,7 +75,8 @@ func main() {
 // send email task processor
 func runTaskProcessor(config util.Config, redisOpt asynq.RedisClientOpt, store *db.Queries) {
 	mail := mail.NewGmailSender(config.EmailSenderName, config.EmailSenderAdderss, config.EmailSenderPassword)
-	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, store, mail)
+	esClient := elasticsearch.NewElasticsearchClient(config)
+	taskProcessor := worker.NewRedisTaskProcessor(redisOpt, store, mail, esClient)
 	err := taskProcessor.Start()
 	if err != nil {
 		fmt.Println("failed to start task processor")
