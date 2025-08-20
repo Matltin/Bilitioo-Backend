@@ -111,7 +111,12 @@ INNER JOIN "city" dc ON dc.id = ro.destination_city_id
 WHERE p.status != 'COMPLETED' AND re.user_id = $1;
 
 -- name: GetAllTickets :many
-SELECT * FROM "ticket"
+SELECT 
+      t.*, 
+      ro.origin_city_id AS origin_province_id,
+      ro.destination_city_id AS destination_province_id
+FROM "ticket" t
+INNER JOIN "route" ro ON t.route_id = ro.id
 WHERE status != 'RESERVED';
 
 -- name: UpdateTicketStatus :one
@@ -119,4 +124,3 @@ UPDATE "ticket"
 SET status = $1
 WHERE id = $2
 RETURNING amount;
-
