@@ -74,7 +74,7 @@ func main() {
 	// 5. setup server
 	server := api.NewServer(config, taskDistributor, Queries, redis, esClient)
 
-	server.Start(":4000")
+	server.Start(":3000")
 }
 
 // send email task processor
