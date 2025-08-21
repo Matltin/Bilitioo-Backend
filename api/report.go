@@ -2,6 +2,7 @@ package api
 
 import (
 	"database/sql"
+	"log"
 	"net/http"
 
 	db "github.com/Matltin/Bilitioo-Backend/db/sqlc"
@@ -99,6 +100,8 @@ func (server *Server) updateTicketByReport(ctx *gin.Context) {
 		return
 	}
 
+	log.Printf("ReservationID: %d\n\n\n", req.ReservationID)
+
 	authPayload := ctx.MustGet(authorizationPyloadKey).(*token.Payload)
 
 	status, err := server.Queries.GetReservationStatus(ctx, req.ReservationID)
@@ -111,7 +114,7 @@ func (server *Server) updateTicketByReport(ctx *gin.Context) {
 		return
 	}
 
-	reserve, err := server.Queries.GetReservationDetails(ctx, req.ReservationID)
+	reserve, err := server.Queries.GetReservationDetailsWithReservationID(ctx, req.ReservationID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(err))
@@ -180,7 +183,7 @@ type change struct {
 	AdminID             int64
 	Amount              int64
 	ToStatusReservation string
-	Reserve             db.GetReservationDetailsRow
+	Reserve             db.GetReservationDetailsWithReservationIDRow
 }
 
 func (server *Server) changeadd(ctx *gin.Context, ch change) {

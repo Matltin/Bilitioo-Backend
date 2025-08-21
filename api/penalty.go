@@ -91,7 +91,7 @@ func (server *Server) cancelReservation(ctx *gin.Context) {
 
 	authPayload := ctx.MustGet(authorizationPyloadKey).(*token.Payload)
 
-	reservation, err := server.Queries.GetReservationDetails(ctx, req.TicketID)
+	reservation, err := server.Queries.GetReservationDetailsWithTicketID(ctx, req.TicketID)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			ctx.JSON(http.StatusNotFound, errorResponse(errors.New("reserved not found")))

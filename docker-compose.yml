@@ -70,6 +70,8 @@ services:
     entrypoint: [ "/app/wait-for.sh", "postgres:5432", "--", "/app/wait-for.sh", "redis:6379", "--", "/app/start.sh" ]
     command: [ "/app/main" ]
 
+
+
 volumes:
   postgres_data:
   redis_data:

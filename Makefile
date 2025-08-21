@@ -89,7 +89,7 @@ start-local:
 # Generate Go code from SQL using sqlc
 sqlc:
 	@echo "Generating Go code from SQL..."
-	docker-compose run --rm $(SERVICE_API) sqlc generate
+	sqlc generate
 
 # Open an interactive shell inside the running API container
 shell-api:
