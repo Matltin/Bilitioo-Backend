@@ -158,7 +158,7 @@ func (server *Server) cancelReservation(ctx *gin.Context) {
 		penaltyPercentage = penalty.BeforDay
 	}
 
-	totalAmount := reservation.Amount * int64((100-penaltyPercentage)/100)
+	totalAmount := int64(float64(reservation.Amount) * float64(100-penaltyPercentage) / 100)
 
 	argWallet := db.AddToUserWalletParams{
 		Wallet: totalAmount,

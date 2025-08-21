@@ -51,24 +51,24 @@ services:
     depends_on:
       - elasticsearch
 
-  api:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    container_name: bilitioo_api
-    restart: always
-    ports:
-      - "3000:3000"
-    environment:
-      - DB_SOURCE=postgresql://root:secret@postgres:5432/bilitioo?sslmode=disable
-      - REDIS_ADDRESS=redis:6379
-      - ELASTICSEARCH_ADDRESS=http://elasticsearch:9200
-    depends_on:
-      - postgres
-      - redis
-      - elasticsearch
-    entrypoint: [ "/app/wait-for.sh", "postgres:5432", "--", "/app/wait-for.sh", "redis:6379", "--", "/app/start.sh" ]
-    command: [ "/app/main" ]
+  # api:
+  #   build:
+  #     context: .
+  #     dockerfile: Dockerfile
+  #   container_name: bilitioo_api
+  #   restart: always
+  #   ports:
+  #     - "3000:3000"
+  #   environment:
+  #     - DB_SOURCE=postgresql://root:secret@postgres:5432/bilitioo?sslmode=disable
+  #     - REDIS_ADDRESS=redis:6379
+  #     - ELASTICSEARCH_ADDRESS=http://elasticsearch:9200
+  #   depends_on:
+  #     - postgres
+  #     - redis
+  #     - elasticsearch
+  #   entrypoint: [ "/app/wait-for.sh", "postgres:5432", "--", "/app/wait-for.sh", "redis:6379", "--", "/app/start.sh" ]
+  #   command: [ "/app/main" ]
 
 volumes:
   postgres_data:
