@@ -1,21 +1,24 @@
-# Build stage
-FROM golang:latest AS builder
+FROM golang:1.23-alpine
+
+RUN apk add --no-cache curl git build-base
+
 WORKDIR /app
+
+COPY go.mod go.sum ./
+RUN go mod download
+
 COPY . .
+
 RUN CGO_ENABLED=0 GOOS=linux go build -o main main.go
-RUN apt-get update && apt-get install -y curl
-RUN curl -L https://github.com/golang-migrate/migrate/releases/download/v4.18.3/migrate.linux-386.deb -o migrate.linux-386
 
-# Run stage
-FROM alpine:3.19
-WORKDIR /app
+RUN curl -L https://github.com/golang-migrate/migrate/releases/download/v4.17.0/migrate.linux-amd64.tar.gz | tar xvz
+RUN mv migrate /usr/bin/migrate
 
-COPY --from=builder /app/main .
-COPY --from=builder /app/migrate.linux-386 ./migrate-bin
-COPY app.env .
-COPY start.sh .
+RUN chmod +x /app/wait-for.sh
+RUN chmod +x /app/start.sh
 
-COPY db/migrate ./migrations
+EXPOSE 3000
 
-EXPOSE 8080
 ENTRYPOINT ["/app/start.sh"]
+
+CMD [ "/app/main" ]
