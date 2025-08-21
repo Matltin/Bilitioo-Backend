@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -85,6 +86,8 @@ func (server *Server) cancelReservation(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, errorResponse(err))
 		return
 	}
+
+	log.Println("tiket id is :", req.TicketID)
 
 	authPayload := ctx.MustGet(authorizationPyloadKey).(*token.Payload)
 

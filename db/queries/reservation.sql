@@ -47,7 +47,7 @@ SELECT
     t.status
 FROM "ticket" t
 INNER JOIN "reservation" r ON r.ticket_id = t.id 
-WHERE r.id = $1;
+WHERE t.id = $1;
 
 -- name: CancelReservation :exec
 UPDATE "ticket"
