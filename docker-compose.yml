@@ -1,6 +1,6 @@
-version: '3.8'
-
+# The 'version' attribute is obsolete and has been removed.
 services:
+  # PostgreSQL Database Service
   postgres:
     image: postgres:12-alpine
     container_name: bilitioo_db
@@ -14,6 +14,7 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
 
+  # Redis Service
   redis:
     image: redis:latest
     container_name: bilitioo_redis
@@ -23,6 +24,7 @@ services:
     volumes:
       - redis_data:/data
 
+  # Elasticsearch Service
   elasticsearch:
     image: elasticsearch:8.15.0
     container_name: elasticsearch
@@ -40,6 +42,7 @@ services:
     volumes:
       - esdata:/usr/share/elasticsearch/data
 
+  # Kibana Service
   kibana:
     image: kibana:8.15.0
     container_name: kibana
@@ -51,6 +54,22 @@ services:
     depends_on:
       - elasticsearch
 
+  # --- pgAdmin Service Added ---
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: bilitioo_pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - postgres
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+  # Main API Service
   api:
     build:
       context: .
@@ -60,6 +79,7 @@ services:
     ports:
       - "3000:3000"
     environment:
+      - HTTP_SERVER_ADDRESS=0.0.0.0:3000
       - DB_SOURCE=postgresql://root:secret@postgres:5432/bilitioo?sslmode=disable
       - REDIS_ADDRESS=redis:6379
       - ELASTICSEARCH_ADDRESS=http://elasticsearch:9200
@@ -67,13 +87,13 @@ services:
       - postgres
       - redis
       - elasticsearch
-    entrypoint: [ "/app/wait-for.sh", "postgres:5432", "--", "/app/wait-for.sh", "redis:6379", "--", "/app/start.sh" ]
+    entrypoint: [ "/app/wait-for.sh", "postgres:5432", "--", "/app/wait-for.sh", "redis:6379", "--", "/app/wait-for.sh", "elasticsearch:9200", "--", "/app/start.sh" ]
     command: [ "/app/main" ]
 
-
-
+# Define volumes for persistent data storage
 volumes:
   postgres_data:
   redis_data:
+  pgadmin_data:
   esdata:
     driver: local
