@@ -85,7 +85,7 @@ func (ser *Server) setupRouter() {
 		authRoutes.GET("/city", ser.getCities)
 		authRoutes.POST("/city", ser.searchTicketsByCities)
 		authRoutes.POST("/search-tickets", ser.searchTickets)
-		authRoutes.GET("/ticket-detail/:ticket_id", ser.getTicketDetails)
+		authRoutes.POST("/saerch-tickets", ser.searchTicketsElastic)
 		authRoutes.POST("/reservation", ser.createReservation)
 		authRoutes.GET("/completedReservation", ser.getCompletedUserReservation)
 		authRoutes.GET("/allReservation", ser.getAllUserReservation)
@@ -96,6 +96,7 @@ func (ser *Server) setupRouter() {
 		authRoutes.GET("/completed-tickets", ser.getAllUserCompletedTickets)
 		authRoutes.GET("/notcompleted-tickets", ser.getAllUserNotCompletedTickets)
 		authRoutes.POST("/report", ser.createReport) // Users can create reports
+		authRoutes.GET("/ticket-detail/:ticket_id", ser.getTicketDetails)
 	}
 
 	// Admin-only routes (requires both authentication and admin role)
