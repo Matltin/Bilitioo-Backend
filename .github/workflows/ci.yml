@@ -46,7 +46,7 @@ jobs:
                 which migrate
 
           - name: Initialize db
-            run: make migrateup
+            run: make migrate-up
           
           - name: Tidy dependencies
             run: go mod tidy
